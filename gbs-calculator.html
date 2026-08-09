@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>GBS G-123 전기요금 분석기</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#060f1e;font-family:'Malgun Gothic',sans-serif;color:#e8eaf0;font-size:13px}
+input[type=range]{width:100%;cursor:pointer;accent-color:#42a5f5}
+input[type=number],input[type=month]{outline:none}
+table{border-collapse:collapse;width:100%}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#2a4a7f;border-radius:2px}
+</style>
+</head>
+<body>
+<div id="gbs-root"></div>
+<script>
+window.GBS_USER=(window.parent&&window.parent.GBS_USER)||{grade:1,isLogin:false,loginUrl:"/wp-login.php",upgradeUrl:"/membership-levels/"};
+</script>
+<script type="text/babel">
+const {useState}=React;
+const WP=window.GBS_USER;
+const GRADE=WP.grade||1;
+const GNAME=["","일반회원","특별회원","비즈니스회원"];
+const GCOLOR=["#5a6a82","#90caf9","#ffd600","#43a047"];
+const TC=["#43a047","#f57c00","#e53935","#6a1b9a"];
+const CO2=0.4781;
+
+/* ══ 요금 DB ══ */
+const RH=[
+  {from:"2002-06",to:"2004-09",bl:[360,630,3630],bh:[290,510,2940],t:[100,200],el:{o:[52.6,105.0,148.0]},eh:{o:[44.7,89.3,125.8]},cl:0,fu:0,note:"누진제 최초 도입"},
+  {from:"2004-10",to:"2007-12",bl:[360,630,3630],bh:[290,510,2940],t:[100,200],el:{o:[56.9,109.0,153.0]},eh:{o:[48.4,92.7,130.1]},cl:0,fu:0,note:"1차 인상"},
+  {from:"2008-01",to:"2010-06",bl:[570,1000,4780],bh:[460,810,3860],t:[100,200],el:{o:[63.1,122.0,173.0]},eh:{o:[53.6,103.7,147.1]},cl:0,fu:0,note:"2차 인상"},
+  {from:"2010-07",to:"2011-07",bl:[570,1000,4780],bh:[460,810,3860],t:[100,200],el:{o:[67.0,131.0,186.0]},eh:{o:[57.0,111.4,158.1]},cl:0,fu:0,note:"3차 인상"},
+  {from:"2011-08",to:"2012-07",bl:[570,1000,6060],bh:[460,810,4900],t:[200,400],el:{o:[72.7,153.3,243.9]},eh:{o:[61.8,130.3,207.3]},cl:0,fu:0,note:"구간 확대"},
+  {from:"2012-08",to:"2012-12",bl:[570,1260,6060],bh:[460,1020,4900],t:[200,400],el:{o:[78.2,166.5,267.7]},eh:{o:[66.5,141.5,227.5]},cl:0,fu:0,note:"4차 인상"},
+  {from:"2013-01",to:"2013-10",bl:[730,1260,6060],bh:[590,1020,4900],t:[200,400],el:{o:[78.2,166.5,267.7]},eh:{o:[66.5,141.5,227.5]},cl:0,fu:0,note:"5차 인상"},
+  {from:"2013-11",to:"2016-11",bl:[730,1260,6060],bh:[590,1020,4900],t:[200,400],el:{o:[83.5,172.1,274.0]},eh:{o:[70.9,146.3,232.9]},cl:0,fu:0,note:"6차 인상"},
+  {from:"2016-12",to:"2018-12",bl:[910,1600,7300],bh:[730,1260,6060],t:[200,400],el:{o:[88.3,182.9,275.6]},eh:{o:[75.4,145.3,217.6]},cl:0,fu:0,note:"7차 인상"},
+  {from:"2019-01",to:"2020-12",bl:[910,1600,7300],bh:[730,1260,6060],t:[200,400],el:{o:[88.3,182.9,275.6],s:[120.0,214.6,307.3],w:[120.0,214.6,307.3]},eh:{o:[75.4,145.3,217.6],s:[101.4,171.3,243.6],w:[101.4,171.3,243.6]},cl:0,fu:0,note:"하계동계 구분"},
+  {from:"2021-01",to:"2022-12",bl:[910,1600,7300],bh:[730,1260,6060],t:[200,400],el:{o:[88.3,182.9,275.6],s:[120.0,214.6,307.3],w:[120.0,214.6,307.3]},eh:{o:[75.4,145.3,217.6],s:[101.4,171.3,243.6],w:[101.4,171.3,243.6]},cl:5.3,fu:0,note:"기후환경요금 신설"},
+  {from:"2023-01",to:"2023-12",bl:[910,1600,7300],bh:[730,1260,6060],t:[200,400],el:{o:[88.3,182.9,275.6],s:[120.0,214.6,307.3],w:[120.0,214.6,307.3]},eh:{o:[75.4,145.3,217.6],s:[101.4,171.3,243.6],w:[101.4,171.3,243.6]},cl:9.0,fu:5.0,note:"연료비조정액 추가"},
+  {from:"2024-01",to:"2099-12",bl:[910,1600,7300],bh:[730,1260,6060],t:[200,400],el:{o:[88.3,182.9,275.6],s:[120.0,214.6,307.3],w:[120.0,214.6,307.3]},eh:{o:[75.4,145.3,217.6],s:[101.4,171.3,243.6],w:[101.4,171.3,243.6]},cl:9.0,fu:5.0,note:"현행(2024)"},
+];
+
+/* 공용전기 일반용전력 단가 */
+const GB={high2:8230,high1:7220,low:6160};
+const GR={high2:{s:130,w:130,o:98},high1:{s:130,w:130,o:98},low:{s:163,w:163,o:114}};
+
+function getRate(ym){const s=ym.replace("-","");return RH.find(r=>s>=r.from.replace("-","")&&s<=r.to.replace("-",""))||RH[RH.length-1];}
+function getSeason(ym){const m=parseInt(ym.split("-")[1]);return m>=7&&m<=8?"s":m>=12||m<=2?"w":"o";}
+
+/* ① 주택용전력 세대 요금 (저압=종합 / 고압=단일) */
+function calcUnit(kwh,rate,hi,sk){
+  if(kwh<=0)return{basic:0,energy:0,climate:0,fuel:0,sub:0,vat:0,fund:0,total:0,tier:0,en:[]};
+  const bas=hi?rate.bh:rate.bl;
+  const en=(hi?rate.eh:rate.el)[sk]||(hi?rate.eh:rate.el).o;
+  const t=rate.t;
+  let tier=0;for(let i=t.length-1;i>=0;i--){if(kwh>t[i]){tier=i+1;break;}}
+  const basic=bas[Math.min(tier,bas.length-1)];
+  let energy=0,rem=kwh;
+  for(let i=0;i<t.length;i++){const lo=i===0?0:t[i-1],used=Math.min(rem,t[i]-lo);energy+=Math.round(used*en[i]);rem-=used;if(rem<=0)break;}
+  if(rem>0)energy+=Math.round(rem*en[en.length-1]);
+  const climate=Math.round(kwh*(rate.cl||0)),fuel=Math.round(kwh*(rate.fu||0));
+  const sub=basic+energy+climate+fuel,vat=Math.round(sub*0.10),fund=Math.round(sub*0.037);
+  return{basic,energy,climate,fuel,sub,vat,fund,total:Math.round((sub+vat+fund)/10)*10,tier,en};
+}
+
+/* ② 공용전기 일반용전력 요금 (G-123 핵심!) */
+function calcCommon(cKwh,totalKwh,billingKw,gType,sk,rate){
+  if(cKwh<=0)return{basic:0,energy:0,climate:0,fuel:0,elecFee:0,vat:0,fund:0,total:0,ratio:0,basicRate:0,ur:0};
+  const basicRate=GB[gType]||GB.high2;
+  const ur=(GR[gType]||GR.high2)[sk];
+  const ratio=totalKwh>0?cKwh/totalKwh:0;
+  const basic=Math.round(billingKw*ratio*basicRate);
+  const energy=Math.round(cKwh*ur);
+  const climate=Math.round(cKwh*(rate.cl||0));
+  const fuel=Math.round(cKwh*(rate.fu||0));
+  const elecFee=basic+energy+climate+fuel;
+  const vat=Math.round(elecFee*0.10),fund=Math.round(elecFee*0.032);
+  return{basic,energy,climate,fuel,elecFee,vat,fund,total:Math.round((elecFee+vat+fund)/10)*10,ratio:Math.round(ratio*10000)/100,basicRate,ur};
+}
+
+/* UI 공통 */
+function Panel({children,style={}}){return <div style={{background:"#0d2137",borderRadius:12,border:"1px solid #2a4a7f",padding:"16px 18px",marginBottom:14,...style}}>{children}</div>;}
+function Tag({c,ch}){return <span style={{background:c+"22",border:`1px solid ${c}66`,borderRadius:5,padding:"2px 8px",fontSize:10,color:c,fontWeight:700}}>{ch}</span>;}
+function Row({label,value,color="#e8eaf0",bold=false,sub=""}){
+  return(
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+      <span style={{fontSize:11,color:bold?"rgba(255,255,255,0.8)":"rgba(255,255,255,0.45)",fontWeight:bold?700:400}}>
+        {label}{sub&&<span style={{fontSize:9,color:"rgba(255,255,255,0.25)",marginLeft:4}}>{sub}</span>}
+      </span>
+      <span style={{fontSize:bold?13:11,fontWeight:bold?800:500,color}}>{value}</span>
+    </div>
+  );
+}
+
+/* ══ 메인 앱 ══ */
+function App(){
+  const today=new Date();
+  const defYm=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}`;
+  const[ym,setYm]=useState(defYm);
+  const[tab,setTab]=useState("g123");
+  const[unitCount,setUC]=useState(100);
+  const[unitAvgKwh,setUA]=useState(250);
+  const[commonKwh,setCK]=useState(3000);
+  const[billingKw,setBK]=useState(480);
+  const[gType,setGT]=useState("high2");
+  const[showDetail,setSD]=useState(false);
+
+  const rate=getRate(ym), sk=getSeason(ym);
+  const totalUnitKwh=unitCount*unitAvgKwh;
+  const totalMainKwh=totalUnitKwh+commonKwh;
+
+  /* 종합계약: 세대(주택용저압) + 공용(일반용) */
+  const unitL=calcUnit(unitAvgKwh,rate,false,sk);
+  const totalUnitCostL=unitL.total*unitCount;
+  const commonC=calcCommon(commonKwh,totalMainKwh,billingKw,gType,sk,rate);
+  const totalL=totalUnitCostL+commonC.total;
+
+  /* 단일계약: 세대(주택용고압) + 공용(일반용배분) */
+  const unitH=calcUnit(unitAvgKwh,rate,true,sk);
+  const totalUnitCostH=unitH.total*unitCount;
+  const commonH=calcCommon(commonKwh,totalMainKwh,billingKw,gType,sk,rate);
+  const totalH=totalUnitCostH+commonH.total;
+
+  const diff=totalL-totalH;
+  const perUnitDiff=unitCount>0?Math.round(diff/unitCount):0;
+
+  const TABS=[
+    {id:"g123",l:"G-123 분석"},
+    {id:"basic",l:"요금계산"},
+    {id:"history",l:"이력조회",min:2},
+    {id:"plan",l:"등급안내"},
+  ];
+
+  const GC=GCOLOR[GRADE]||"#90caf9";
+  const GN=GNAME[GRADE]||"일반회원";
+
+  return(
+    <div style={{background:"#060f1e",minHeight:"100vh",color:"#e8eaf0"}}>
+
+      {/* 헤더 */}
+      <div style={{background:"linear-gradient(135deg,#0a1628,#061020)",borderBottom:"2px solid #1e3a5f",padding:"12px 16px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+          <div style={{width:44,height:44,background:"linear-gradient(135deg,#1b5e20,#43a047)",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>🌿</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:15,fontWeight:900,color:"#fff"}}>GBS G-123 전기요금 정밀분석기</div>
+            <div style={{fontSize:10,color:"#43a047",fontWeight:700}}>종합(세대주택용+공용일반용) vs 단일(세대주택용고압+공용일반용) — 한전 오류 수정판</div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+            <div style={{background:GC+"22",border:`1px solid ${GC}55`,borderRadius:8,padding:"4px 10px",fontSize:11,fontWeight:700,color:GC}}>{GN}</div>
+            <input type="month" value={ym} min="2002-06" max="2099-12" onChange={e=>setYm(e.target.value)}
+              style={{padding:"5px 8px",background:"#0a1e36",border:"2px solid #2a4a7f",borderRadius:8,color:"#90caf9",fontSize:12,fontWeight:700}}/>
+            <span style={{background:"#1a3a6b",borderRadius:6,padding:"3px 9px",fontSize:10,color:"#90caf9",fontWeight:700}}>{rate.note}</span>
+            <span style={{fontSize:11,fontWeight:700,color:sk==="s"?"#f57c00":sk==="w"?"#42a5f5":"#43a047"}}>{sk==="s"?"☀ 하계":sk==="w"?"❄ 동계":"☘ 평시"}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 탭 */}
+      <div style={{display:"flex",background:"#0a1628",borderBottom:"1px solid #1e3a5f",overflowX:"auto"}}>
+        {TABS.map(t=>{
+          const lock=(t.min||1)>GRADE, on=tab===t.id;
+          return(
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{flex:"0 0 auto",padding:"11px 14px",fontSize:11,fontWeight:on?800:400,color:lock?"rgba(255,255,255,0.2)":on?"#fff":"rgba(255,255,255,0.5)",background:"none",border:"none",borderBottom:on?"3px solid #43a047":"3px solid transparent",cursor:"pointer",whiteSpace:"nowrap"}}>
+              {t.l}{lock?" 🔒":""}
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{padding:"14px 16px",maxWidth:900,margin:"0 auto",boxSizing:"border-box"}}>
+
+        {/* ══ G-123 분석 탭 ══ */}
+        {tab==="g123"&&(
+          <div>
+            {/* 핵심 개념 */}
+            <div style={{background:"linear-gradient(135deg,#1a0a00,#2d1500)",borderRadius:12,border:"2px solid #f57c0055",padding:"16px 18px",marginBottom:14}}>
+              <div style={{fontSize:13,fontWeight:800,color:"#ffd600",marginBottom:10}}>⚠️ 한전의 오류 vs GBS G-123 정확한 계산</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <div style={{background:"rgba(239,83,80,0.08)",border:"1px solid #ef535033",borderRadius:8,padding:"10px 12px"}}>
+                  <div style={{fontSize:11,fontWeight:700,color:"#ef5350",marginBottom:6}}>❌ 한전·기존 분석의 오류</div>
+                  <div style={{fontSize:10,color:"rgba(255,255,255,0.6)",lineHeight:2.0}}>
+                    • 종합계약 세대요금 <b style={{color:"#ef9a9a"}}>단순 평균</b> 비교<br/>
+                    • 공용전기가 <b style={{color:"#ef9a9a"}}>빠져있거나 잘못 산정</b><br/>
+                    • 단일계약자에게 공용을 <b style={{color:"#ef9a9a"}}>주택용고압으로 부과</b><br/>
+                    • 이 오류로 단일계약이 더 유리한 것처럼 왜곡
+                  </div>
+                </div>
+                <div style={{background:"rgba(67,160,71,0.08)",border:"1px solid #43a04733",borderRadius:8,padding:"10px 12px"}}>
+                  <div style={{fontSize:11,fontWeight:700,color:"#43a047",marginBottom:6}}>✅ GBS G-123 정확한 계산</div>
+                  <div style={{fontSize:10,color:"rgba(255,255,255,0.6)",lineHeight:2.0}}>
+                    • <b style={{color:"#a5d6a7"}}>종합 = Σ세대(주택용저압) + 공용(일반용)</b><br/>
+                    • <b style={{color:"#90caf9"}}>단일 = Σ세대(주택용고압) + 공용(일반용)</b><br/>
+                    • 동일 조건 · 동일 계산식으로 <b style={{color:"#ffd600"}}>진정한 비교</b><br/>
+                    • 한전이 감추던 진실을 수치로 증명!
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 입력 패널 */}
+            <Panel style={{border:"2px solid #f57c0044"}}>
+              <div style={{fontSize:13,fontWeight:800,color:"#f57c00",marginBottom:14}}>📋 단지 정보 입력</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:12}}>
+                {[
+                  {label:"총 세대 수",val:unitCount,set:setUC,unit:"세대",color:"#90caf9",min:1},
+                  {label:"세대 평균 사용량",val:unitAvgKwh,set:setUA,unit:"kWh/세대",color:"#f57c00",min:0},
+                  {label:"공용전기 사용량",val:commonKwh,set:setCK,unit:"kWh",color:"#ffcc80",min:0},
+                  {label:"요금적용전력(kW)",val:billingKw,set:setBK,unit:"kW",color:"#ce93d8",min:1},
+                ].map(({label,val,set,unit,color,min})=>(
+                  <div key={label}>
+                    <div style={{fontSize:10,color:"rgba(255,255,255,0.45)",marginBottom:4}}>{label}</div>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <input type="number" value={val} min={min} onChange={e=>set(Math.max(min,Number(e.target.value)))}
+                        style={{flex:1,padding:"8px 10px",background:"#0a1e36",border:`2px solid ${color}`,borderRadius:8,color,fontSize:16,fontWeight:800,textAlign:"right"}}/>
+                      <span style={{fontSize:10,color:"rgba(255,255,255,0.35)",whiteSpace:"nowrap"}}>{unit}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{marginBottom:10}}>
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.45)",marginBottom:6}}>공용전기 계약종별 (일반용전력)</div>
+                <div style={{display:"flex",gap:6}}>
+                  {[{k:"high2",l:"고압2",s:"8,230원/kW ★아파트"},{k:"high1",l:"고압1",s:"7,220원/kW"},{k:"low",l:"저압",s:"6,160원/kW"}].map(x=>(
+                    <button key={x.k} onClick={()=>setGT(x.k)} style={{flex:1,padding:"8px 6px",borderRadius:8,cursor:"pointer",border:gType===x.k?"2px solid #ffcc80":"1px solid #2a4a7f",background:gType===x.k?"#3d2a00":"#0a1e36",textAlign:"center"}}>
+                      <div style={{fontSize:11,fontWeight:700,color:gType===x.k?"#ffcc80":"#888"}}>{x.l}</div>
+                      <div style={{fontSize:9,color:gType===x.k?"#ffa":"rgba(255,255,255,0.25)"}}>{x.s}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
+                {[["세대 총사용량",(totalUnitKwh).toLocaleString()+"kWh","#90caf9"],["공용 사용량",commonKwh.toLocaleString()+"kWh","#ffcc80"],["메인 총사용량",totalMainKwh.toLocaleString()+"kWh","#43a047"]].map(([l,v,c])=>(
+                  <div key={l} style={{background:c+"12",border:`1px solid ${c}33`,borderRadius:7,padding:"8px",textAlign:"center"}}>
+                    <div style={{fontSize:9,color:"rgba(255,255,255,0.4)"}}>{l}</div>
+                    <div style={{fontSize:12,fontWeight:800,color:c}}>{v}</div>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+
+            {/* G-123 핵심 결과 */}
+            <div style={{background:"linear-gradient(135deg,#0a0e1a,#0d1e3a)",borderRadius:16,border:"3px solid #ffd600",padding:"18px",marginBottom:14,boxShadow:"0 0 40px rgba(255,214,0,0.12)"}}>
+              <div style={{fontSize:10,color:"#ffd600",letterSpacing:4,fontWeight:700,textAlign:"center",marginBottom:4}}>GBS G-123 핵심 분석 결과</div>
+              <div style={{fontSize:10,color:"rgba(255,255,255,0.35)",textAlign:"center",marginBottom:16}}>동일 단지 · 동일 사용량 | 정확한 계약종별 비교</div>
+
+              <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:10,alignItems:"stretch",marginBottom:14}}>
+
+                {/* 종합계약 */}
+                <div style={{background:"rgba(144,202,249,0.07)",border:"2px solid #90caf944",borderRadius:12,padding:"14px",textAlign:"center"}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#90caf9",marginBottom:3}}>종합계약 (저압)</div>
+                  <div style={{fontSize:9,color:"rgba(255,255,255,0.4)",marginBottom:10,lineHeight:1.7}}>세대: 주택용전력 저압<br/>공용: 일반용전력</div>
+                  <div style={{fontSize:10,color:"#90caf9",marginBottom:2}}>세대 합계</div>
+                  <div style={{fontSize:18,fontWeight:800,color:"#90caf9"}}>{totalUnitCostL.toLocaleString()}원</div>
+                  <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginBottom:8}}>{unitL.total.toLocaleString()}원 × {unitCount}세대</div>
+                  <div style={{height:1,background:"rgba(255,255,255,0.08)",marginBottom:8}}/>
+                  <div style={{fontSize:10,color:"#ffcc80",marginBottom:2}}>공용(일반용전력)</div>
+                  <div style={{fontSize:18,fontWeight:800,color:"#ffcc80"}}>{commonC.total.toLocaleString()}원</div>
+                  <div style={{height:1,background:"rgba(255,255,255,0.08)",margin:"8px 0"}}/>
+                  <div style={{fontSize:10,color:"rgba(255,255,255,0.5)",marginBottom:3}}>단지 전체 합계</div>
+                  <div style={{fontSize:26,fontWeight:900,color:"#fff"}}>{totalL.toLocaleString()}<span style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginLeft:3}}>원</span></div>
+                  <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginTop:3}}>세대당 {Math.round(totalL/unitCount).toLocaleString()}원</div>
+                </div>
+
+                {/* 차액 */}
+                <div style={{textAlign:"center",display:"flex",flexDirection:"column",justifyContent:"center",minWidth:90}}>
+                  <div style={{fontSize:8,color:"rgba(255,255,255,0.35)",marginBottom:4}}>단지 전체 차액</div>
+                  <div style={{fontSize:32,fontWeight:900,color:diff>0?"#ef9a9a":diff<0?"#43a047":"#fff",lineHeight:1}}>{diff>0?"▲":diff<0?"▼":""}{Math.abs(diff).toLocaleString()}</div>
+                  <div style={{fontSize:12,color:"rgba(255,255,255,0.35)"}}>원/월</div>
+                  <div style={{height:1,background:"rgba(255,255,255,0.08)",margin:"8px 0"}}/>
+                  <div style={{fontSize:8,color:"rgba(255,255,255,0.35)",marginBottom:2}}>세대당 차액</div>
+                  <div style={{fontSize:18,fontWeight:800,color:"#ffd600"}}>{Math.abs(perUnitDiff).toLocaleString()}원</div>
+                  <div style={{height:1,background:"rgba(255,255,255,0.08)",margin:"8px 0"}}/>
+                  <div style={{fontSize:8,color:"rgba(255,255,255,0.35)",marginBottom:2}}>연간 차액</div>
+                  <div style={{fontSize:14,fontWeight:800,color:"#ffd600"}}>{(Math.abs(diff)*12).toLocaleString()}원</div>
+                </div>
+
+                {/* 단일계약 */}
+                <div style={{background:"rgba(239,154,154,0.07)",border:"2px solid #ef9a9a44",borderRadius:12,padding:"14px",textAlign:"center"}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#ef9a9a",marginBottom:3}}>단일계약 (고압)</div>
+                  <div style={{fontSize:9,color:"rgba(255,255,255,0.4)",marginBottom:10,lineHeight:1.7}}>세대: 주택용전력 고압<br/>공용: 일반용전력</div>
+                  <div style={{fontSize:10,color:"#ef9a9a",marginBottom:2}}>세대 합계</div>
+                  <div style={{fontSize:18,fontWeight:800,color:"#ef9a9a"}}>{totalUnitCostH.toLocaleString()}원</div>
+                  <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginBottom:8}}>{unitH.total.toLocaleString()}원 × {unitCount}세대</div>
+                  <div style={{height:1,background:"rgba(255,255,255,0.08)",marginBottom:8}}/>
+                  <div style={{fontSize:10,color:"#ffcc80",marginBottom:2}}>공용(일반용전력)</div>
+                  <div style={{fontSize:18,fontWeight:800,color:"#ffcc80"}}>{commonH.total.toLocaleString()}원</div>
+                  <div style={{height:1,background:"rgba(255,255,255,0.08)",margin:"8px 0"}}/>
+                  <div style={{fontSize:10,color:"rgba(255,255,255,0.5)",marginBottom:3}}>단지 전체 합계</div>
+                  <div style={{fontSize:26,fontWeight:900,color:"#fff"}}>{totalH.toLocaleString()}<span style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginLeft:3}}>원</span></div>
+                  <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginTop:3}}>세대당 {Math.round(totalH/unitCount).toLocaleString()}원</div>
+                </div>
+              </div>
+
+              {/* 결론 */}
+              <div style={{background:diff>0?"rgba(239,83,80,0.1)":"rgba(67,160,71,0.1)",border:`1px solid ${diff>0?"#ef535044":"#43a04744"}`,borderRadius:10,padding:"12px 16px",textAlign:"center"}}>
+                <div style={{fontSize:14,fontWeight:800,color:diff>0?"#ef9a9a":"#43a047",marginBottom:6}}>
+                  {diff>0?"⚠️ 종합계약이 단일계약보다 더 비쌉니다!":diff<0?"✅ 종합계약이 단일계약보다 유리합니다!":"두 계약의 요금이 동일합니다"}
+                </div>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.6)",lineHeight:1.9}}>
+                  세대당 월 <b style={{color:"#ffd600"}}>{Math.abs(perUnitDiff).toLocaleString()}원</b> 차액 |
+                  단지 전체 월 <b style={{color:"#ffd600"}}>{Math.abs(diff).toLocaleString()}원</b> |
+                  연간 <b style={{color:"#ffd600"}}>{(Math.abs(diff)*12).toLocaleString()}원</b>
+                </div>
+              </div>
+            </div>
+
+            {/* 상세 내역 */}
+            <button onClick={()=>setSD(v=>!v)} style={{width:"100%",padding:"11px",borderRadius:10,border:"1px solid #2a4a7f",background:"#0a1628",color:"#90caf9",fontWeight:700,fontSize:12,cursor:"pointer",marginBottom:14}}>
+              📋 상세 산출 내역 {showDetail?"▲ 닫기":"▼ 펼치기"}
+            </button>
+
+            {showDetail&&(
+              <>
+                {/* 세대 상세 */}
+                <Panel>
+                  <div style={{fontSize:13,fontWeight:800,color:"#ffe082",marginBottom:12}}>세대당 요금 상세 비교</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                    {[{l:"종합(저압) — 주택용전력",r:unitL,c:"#90caf9"},{l:"단일(고압) — 주택용전력",r:unitH,c:"#ef9a9a"}].map(({l,r,c})=>(
+                      <div key={l} style={{background:"#061428",borderRadius:8,padding:"12px",border:`1px solid ${c}33`}}>
+                        <div style={{fontSize:11,fontWeight:700,color:c,marginBottom:6}}>{l}</div>
+                        <Tag c={TC[r.tier]} ch={`${r.tier+1}단계`}/>
+                        <div style={{marginTop:8}}>
+                          <Row label="기본요금" value={r.basic.toLocaleString()+"원"}/>
+                          <Row label="전력량요금" value={r.energy.toLocaleString()+"원"}/>
+                          <Row label="기후환경요금" value={r.climate.toLocaleString()+"원"}/>
+                          <Row label="연료비조정액" value={r.fuel.toLocaleString()+"원"}/>
+                          <Row label="소계" value={r.sub.toLocaleString()+"원"} bold/>
+                          <Row label="부가세(10%)" value={r.vat.toLocaleString()+"원"}/>
+                          <Row label="기반기금(3.7%)" value={r.fund.toLocaleString()+"원"}/>
+                          <Row label="세대 청구액" value={r.total.toLocaleString()+"원"} color={c} bold/>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Panel>
+
+                {/* 공용전기 상세 */}
+                <Panel style={{border:"2px solid #ffcc8055"}}>
+                  <div style={{fontSize:13,fontWeight:800,color:"#ffcc80",marginBottom:4}}>💡 공용전기 — 일반용전력 산출</div>
+                  <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginBottom:10}}>
+                    기본요금 = 요금적용전력({billingKw}kW) × 공용비율({commonC.ratio.toFixed(2)}%) × {(GB[gType]||GB.high2).toLocaleString()}원/kW
+                  </div>
+                  <Row label="②기본요금" value={commonC.basic.toLocaleString()+"원"} sub={`${billingKw}×${commonC.ratio.toFixed(2)}%×${commonC.basicRate.toLocaleString()}`}/>
+                  <Row label="③사용량요금" value={commonC.energy.toLocaleString()+"원"} sub={`${commonKwh.toLocaleString()}kWh×${commonC.ur}원`}/>
+                  <Row label="⑤기후환경요금" value={commonC.climate.toLocaleString()+"원"}/>
+                  <Row label="⑥연료비조정액" value={commonC.fuel.toLocaleString()+"원"}/>
+                  <Row label="④전기요금 합계" value={commonC.elecFee.toLocaleString()+"원"} bold color="#ffcc80"/>
+                  <Row label="⑦부가가치세(10%)" value={commonC.vat.toLocaleString()+"원"}/>
+                  <Row label="⑧전력산업기반기금(3.2%)" value={commonC.fund.toLocaleString()+"원"}/>
+                  <div style={{marginTop:8,background:"#ffcc80",borderRadius:8,padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <span style={{fontSize:12,fontWeight:700,color:"#3d2a00"}}>⑨ 공용전기 청구요금</span>
+                    <span style={{fontSize:22,fontWeight:900,color:"#3d2a00"}}>{commonC.total.toLocaleString()}원</span>
+                  </div>
+                </Panel>
+
+                {/* 최종 비교표 */}
+                <Panel style={{border:"2px solid #ffd60044"}}>
+                  <div style={{fontSize:13,fontWeight:800,color:"#ffd600",marginBottom:12}}>단지 전체 최종 비교표</div>
+                  <table>
+                    <thead>
+                      <tr style={{background:"#061428"}}>
+                        {["구분","종합계약","단일계약","차액"].map(h=>(
+                          <th key={h} style={{padding:"8px",textAlign:h==="구분"?"left":"right",color:"rgba(255,255,255,0.4)",fontSize:10,borderBottom:"1px solid #1e3a5f"}}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ["세대합계(주택용)",totalUnitCostL,totalUnitCostH,false],
+                        [`  세대당(${unitCount}세대)`,unitL.total,unitH.total,false],
+                        ["공용(일반용전력)",commonC.total,commonH.total,false],
+                        ["단지 전체 합계",totalL,totalH,true],
+                        ["세대당 환산",Math.round(totalL/unitCount),Math.round(totalH/unitCount),true],
+                      ].map(([l,a,b,bold],i)=>{
+                        const d=a-b;
+                        return(
+                          <tr key={i} style={{background:bold?"#1a2a4a":i%2?"#0a1628":"#0d1e36",borderTop:"1px solid #1e3a5f"}}>
+                            <td style={{padding:"7px 8px",color:bold?"#fff":"rgba(255,255,255,0.6)",fontWeight:bold?700:400,fontSize:11}}>{l}</td>
+                            <td style={{padding:"7px 8px",textAlign:"right",color:"#90caf9",fontWeight:bold?800:400,fontSize:bold?14:12}}>{a.toLocaleString()}원</td>
+                            <td style={{padding:"7px 8px",textAlign:"right",color:"#ef9a9a",fontWeight:bold?800:400,fontSize:bold?14:12}}>{b.toLocaleString()}원</td>
+                            <td style={{padding:"7px 8px",textAlign:"right",color:d>0?"#ef9a9a":d<0?"#43a047":"#888",fontWeight:bold?800:600,fontSize:bold?13:11}}>
+                              {d>0?"▲":d<0?"▼":""}{Math.abs(d).toLocaleString()}원
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </Panel>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ══ 요금계산 탭 (단순) ══ */}
+        {tab==="basic"&&(
+          <BasicCalc rate={rate} sk={sk}/>
+        )}
+
+        {/* ══ 이력조회 탭 ══ */}
+        {tab==="history"&&(
+          GRADE>=2?<HistoryTab rate={rate} sk={sk}/>:<LockBox need={2} feat="2002~2024 요금이력 조회"/>
+        )}
+
+        {/* ══ 등급안내 탭 ══ */}
+        {tab==="plan"&&<PlanTab/>}
+
+      </div>
+
+      {/* 하단 */}
+      <div style={{textAlign:"center",padding:"16px",fontSize:10,color:"rgba(255,255,255,0.25)",borderTop:"1px solid #1e3a5f",marginTop:16}}>
+        GBS G-123 | 한전 오류 수정판 | CO2 {CO2}kg/kWh | 2002~2024 | ojs.co.kr
+      </div>
+    </div>
+  );
+}
+
+/* ══ 기본 요금계산 ══ */
+function BasicCalc({rate,sk}){
+  const[kwh,setKwh]=useState(300);
+  const rL=calcUnit(kwh,rate,false,sk),rH=calcUnit(kwh,rate,true,sk);
+  const diff=rL.total-rH.total;
+  return(
+    <div>
+      <Panel>
+        <div style={{fontSize:14,fontWeight:800,color:"#90caf9",marginBottom:4}}>⚡ 세대 단순 요금 계산</div>
+        <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginBottom:14}}>세대 단위 주택용전력 저압 vs 고압 (공용전기 미포함 단순비교)</div>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+          <input type="number" value={kwh} min={0} max={2000} onChange={e=>setKwh(Math.max(0,Number(e.target.value)))}
+            style={{flex:1,padding:"12px",background:"#0a1e36",border:"2px solid #42a5f5",borderRadius:8,color:"#42a5f5",fontSize:24,fontWeight:900,textAlign:"center"}}/>
+          <span style={{color:"rgba(255,255,255,0.4)",fontSize:13}}>kWh</span>
+        </div>
+        <input type="range" min={0} max={1000} step={10} value={kwh} onChange={e=>setKwh(Number(e.target.value))} style={{marginBottom:14}}/>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+          {[{l:"종합(저압) 주택용",r:rL,c:"#90caf9"},{l:"단일(고압) 주택용",r:rH,c:"#ef9a9a"}].map(({l,r,c})=>(
+            <div key={l} style={{background:"#061428",borderRadius:10,padding:"14px",border:`2px solid ${c}44`,textAlign:"center"}}>
+              <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginBottom:4}}>{l}</div>
+              <div style={{fontSize:26,fontWeight:900,color:c}}>{r.total.toLocaleString()}<span style={{fontSize:12,color:"rgba(255,255,255,0.3)",marginLeft:3}}>원</span></div>
+              <div style={{marginTop:6}}><Tag c={TC[r.tier]} ch={`${r.tier+1}단계`}/></div>
+              <div style={{fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:4}}>기본 {r.basic.toLocaleString()} + 전력량 {r.energy.toLocaleString()}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{background:"linear-gradient(135deg,#0a0e1a,#0d1e3a)",borderRadius:10,border:"2px solid #ffd60044",padding:"14px",textAlign:"center"}}>
+          <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginBottom:4}}>세대 단위 차액 (공용전기 미포함)</div>
+          <div style={{fontSize:36,fontWeight:900,color:diff>0?"#ef9a9a":diff<0?"#43a047":"#fff"}}>{diff>0?"▲":diff<0?"▼":""}{Math.abs(diff).toLocaleString()}원</div>
+          <div style={{fontSize:11,color:"rgba(255,255,255,0.3)",marginTop:4}}>※ 정확한 비교는 G-123 분석 탭을 이용하세요</div>
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+/* ══ 요금이력 ══ */
+function HistoryTab(){
+  const[kwh,setKwh]=useState(300);const[type,setType]=useState("low");
+  const rows=RH.map(r=>{const sk2=getSeason(r.from+"-01");return{...r,res:calcUnit(kwh,r,type==="high",sk2)};});
+  const vals=rows.map(r=>r.res.total);const mn=Math.min(...vals),mx2=Math.max(...vals);
+  return(
+    <Panel style={{border:"2px solid #ce93d833"}}>
+      <div style={{fontSize:14,fontWeight:800,color:"#ce93d8",marginBottom:12}}>📅 2002~2024 요금이력 비교</div>
+      <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:12,flexWrap:"wrap"}}>
+        <input type="number" value={kwh} min={0} max={2000} onChange={e=>setKwh(Number(e.target.value))}
+          style={{width:90,padding:"6px 10px",background:"#0a1e36",border:"2px solid #ce93d8",borderRadius:8,color:"#ce93d8",fontSize:16,fontWeight:800,textAlign:"center"}}/>
+        <span style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>kWh</span>
+        {[{k:"low",l:"종합(저압)"},{k:"high",l:"단일(고압)"}].map(x=>(
+          <button key={x.k} onClick={()=>setType(x.k)} style={{padding:"5px 12px",borderRadius:7,cursor:"pointer",border:type===x.k?"2px solid #ce93d8":"1px solid #2a4a7f",background:type===x.k?"rgba(206,147,216,0.15)":"#0a1e36",color:type===x.k?"#ce93d8":"#5a7a9a",fontWeight:700,fontSize:11}}>{x.l}</button>
+        ))}
+        <input type="range" min={0} max={1000} step={10} value={kwh} onChange={e=>setKwh(Number(e.target.value))} style={{flex:1,minWidth:80}}/>
+      </div>
+      <div style={{maxHeight:420,overflowY:"auto"}}>
+        <table>
+          <thead style={{position:"sticky",top:0}}>
+            <tr style={{background:"#061428"}}>
+              {["기간/구간","단계","기본","전력량","최종"].map(h=>(
+                <th key={h} style={{padding:"7px 5px",textAlign:h==="기간/구간"?"left":"right",color:"rgba(255,255,255,0.4)",fontSize:10,borderBottom:"1px solid #2a4a7f",whiteSpace:"nowrap"}}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r,i)=>{const cur=r.to==="2099-12",isMin=r.res.total===mn,isMax=r.res.total===mx2;return(
+              <tr key={i} style={{background:cur?"rgba(67,160,71,0.08)":i%2?"#0a1628":"#0d1e36",borderLeft:cur?"3px solid #43a047":isMin?"3px solid #43a047":isMax?"3px solid #e53935":"3px solid transparent"}}>
+                <td style={{padding:"6px 5px",fontSize:10}}>
+                  <div style={{color:cur?"#43a047":"rgba(255,255,255,0.6)",fontWeight:cur?800:400}}>{r.note}</div>
+                  <div style={{fontSize:8,color:"rgba(255,255,255,0.25)"}}>{r.from}~{r.to==="2099-12"?"현재":r.to}</div>
+                </td>
+                <td style={{padding:"6px 5px",textAlign:"right"}}><Tag c={TC[r.res.tier]} ch={String(r.res.tier+1)}/></td>
+                <td style={{padding:"6px 5px",textAlign:"right",color:"rgba(255,255,255,0.5)",fontSize:10}}>{r.res.basic.toLocaleString()}</td>
+                <td style={{padding:"6px 5px",textAlign:"right",color:"#90caf9",fontSize:10}}>{r.res.energy.toLocaleString()}</td>
+                <td style={{padding:"6px 5px",textAlign:"right",color:cur?"#43a047":isMin?"#43a047":isMax?"#ef5350":"#ffd600",fontWeight:cur||isMin||isMax?900:600,fontSize:cur?14:11}}>{r.res.total.toLocaleString()}원{isMin?" 📉":isMax?" 📈":""}</td>
+              </tr>
+            );})}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
+  );
+}
+
+/* ══ 잠금박스 ══ */
+function LockBox({need,feat}){
+  const info={2:{name:"특별회원",price:"월 9,900원",color:"#ffd600"},3:{name:"비즈니스회원",price:"월 123,000원",color:"#43a047"}}[need];
+  return(
+    <div style={{borderRadius:12,border:`2px solid ${info.color}44`,background:"rgba(6,15,30,0.97)",padding:"40px 20px",textAlign:"center"}}>
+      <div style={{fontSize:40,marginBottom:12}}>🔒</div>
+      <div style={{fontSize:16,fontWeight:800,color:info.color,marginBottom:8}}>{info.name} 전용 기능</div>
+      <div style={{fontSize:12,color:"rgba(255,255,255,0.5)",marginBottom:20,lineHeight:1.9}}>{feat}<br/>{info.name}({info.price}) 이상에서 이용 가능</div>
+      <a href={WP.upgradeUrl} style={{padding:"12px 28px",borderRadius:10,background:`linear-gradient(135deg,${info.color},${info.color}aa)`,color:"#000",fontWeight:900,fontSize:13,textDecoration:"none",display:"inline-block"}}>{info.name}으로 업그레이드</a>
+    </div>
+  );
+}
+
+/* ══ 등급안내 ══ */
+function PlanTab(){
+  const plans=[
+    {g:1,name:"일반회원",price:"무료",color:"#90caf9",feat:["G-123 기본 분석","세대 단순 요금 계산","월/연간 차액 확인","X 상세 누진 분석","X 요금이력 조회","X 무제한 다세대"]},
+    {g:2,name:"특별회원",price:"월 9,900원",color:"#ffd600",feat:["G-123 정밀 분석","세대 상세 요금 계산","월/연간 차액 확인","누진 구간별 상세","요금이력 2002~2024","X 무제한 다세대"]},
+    {g:3,name:"비즈니스",price:"월 123,000원",color:"#43a047",feat:["G-123 정밀 분석","세대 상세 요금 계산","월/연간 차액 확인","누진 구간별 상세","요금이력 2002~2024","무제한 다세대+리포트"]},
+  ];
+  return(
+    <div>
+      <div style={{background:"linear-gradient(135deg,#061020,#0a2010)",borderRadius:14,border:"1.5px solid #43a04744",padding:"20px",marginBottom:14,textAlign:"center"}}>
+        <div style={{fontSize:11,color:"#43a047",fontWeight:700,letterSpacing:3,marginBottom:6}}>GBS NATIONAL BIZ</div>
+        <div style={{fontSize:17,fontWeight:900,color:"#fff",marginBottom:6,lineHeight:1.5}}>대한민국 전기요금의 진실을<br/><span style={{color:"#43a047"}}>수치로 증명합니다</span></div>
+        <div style={{fontSize:11,color:"rgba(255,255,255,0.5)",lineHeight:1.9}}>"1kWh의 가치를 국민과 함께"<br/>누진제 역효과로 억울하게 과다 청구된 전기요금을 바로잡고 에너지 정의를 실현하는 국민 플랫폼</div>
+      </div>
+      <div style={{background:"#0d2137",borderRadius:12,border:"1px solid #2a4a7f",padding:"16px"}}>
+        <div style={{fontSize:13,fontWeight:800,color:"#fff",marginBottom:14,textAlign:"center"}}>💎 회원등급별 이용 기능</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+          {plans.map(p=>{const cur=p.g===GRADE;return(
+            <div key={p.g} style={{borderRadius:10,border:`2px solid ${cur?p.color:p.color+"44"}`,background:cur?p.color+"15":"#061428",padding:"14px 10px",position:"relative"}}>
+              {cur&&<div style={{position:"absolute",top:-10,left:"50%",transform:"translateX(-50%)",background:p.color,color:"#000",fontSize:9,fontWeight:800,padding:"2px 10px",borderRadius:10,whiteSpace:"nowrap"}}>현재 등급</div>}
+              <div style={{textAlign:"center",marginBottom:10}}>
+                <div style={{fontSize:12,fontWeight:800,color:p.color}}>{p.name}</div>
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginTop:2}}>{p.price}</div>
+              </div>
+              {p.feat.map((f,i)=><div key={i} style={{fontSize:9,color:f.startsWith("X")?"rgba(255,255,255,0.2)":"rgba(255,255,255,0.75)",padding:"2px 0",lineHeight:1.7}}>{f.startsWith("X")?"❌ "+f.slice(2):"✅ "+f}</div>)}
+              {p.g>GRADE&&<a href={WP.upgradeUrl} style={{display:"block",textAlign:"center",marginTop:10,padding:"8px",borderRadius:7,background:`linear-gradient(135deg,${p.color},${p.color}88)`,color:"#000",fontWeight:800,fontSize:11,textDecoration:"none"}}>업그레이드</a>}
+            </div>
+          );})}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root=ReactDOM.createRoot(document.getElementById("gbs-root"));
+root.render(React.createElement(App,null));
+</script>
+</body>
+</html>
