@@ -1,6 +1,34 @@
-import { useState, useRef } from "react";
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>GBS G-123 전기요금 정밀분석기</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#060f1e;font-family:'Malgun Gothic',sans-serif;color:#e8eaf0;font-size:13px}
+input,select{font-family:inherit}
+input[type=range]{width:100%;cursor:pointer;accent-color:#42a5f5}
+table{border-collapse:collapse;width:100%}
+th,td{padding:7px 8px}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#2a4a7f;border-radius:2px}
+</style>
+</head>
+<body>
+<div id="gbs-root"></div>
+<script>
+window.GBS_USER=(window.parent&&window.parent.GBS_USER)||{grade:1,isLogin:false,loginUrl:"/wp-login.php",upgradeUrl:"/membership-levels/"};
+</script>
+<script type="text/babel">
+const {useState}=React;
+const WP=window.GBS_USER;
+const GRADE=WP.grade||1;
+const CO2=0.4781;
 
-/* ══ 요금 DB ══ */
 const RH=[
   {from:"2002-06",to:"2004-09",bl:[360,630,3630],bh:[290,510,2940],t:[100,200],el:{o:[52.6,105.0,148.0]},eh:{o:[44.7,89.3,125.8]},cl:0,fu:0,note:"누진제 최초 도입"},
   {from:"2004-10",to:"2007-12",bl:[360,630,3630],bh:[290,510,2940],t:[100,200],el:{o:[56.9,109.0,153.0]},eh:{o:[48.4,92.7,130.1]},cl:0,fu:0,note:"1차 인상"},
@@ -18,18 +46,14 @@ const RH=[
 ];
 const GB={high2:8230,high1:7220,low:6160};
 const GR={high2:{s:130,w:130,o:98},high1:{s:130,w:130,o:98},low:{s:163,w:163,o:114}};
-const CO2=0.4781;
 const TC=["#43a047","#f57c00","#e53935","#6a1b9a"];
 
 function getRate(ym){const s=ym.replace("-","");return RH.find(r=>s>=r.from.replace("-","")&&s<=r.to.replace("-",""))||RH[RH.length-1];}
 function getSeason(ym){const m=parseInt(ym.split("-")[1]);return m>=7&&m<=8?"s":m>=12||m<=2?"w":"o";}
 
-/* 주택용전력 요금 계산 (저압=종합세대 / 고압=단일세대) */
-function calcUnit(kwh,rate,isHigh,sk){
+function calcUnit(kwh,rate,hi,sk){
   if(kwh<=0)return{basic:0,energy:0,climate:0,fuel:0,sub:0,vat:0,fund:0,total:0,tier:0};
-  const bas=isHigh?rate.bh:rate.bl;
-  const en=(isHigh?rate.eh:rate.el)[sk]||(isHigh?rate.eh:rate.el).o;
-  const t=rate.t;
+  const bas=hi?rate.bh:rate.bl,en=(hi?rate.eh:rate.el)[sk]||(hi?rate.eh:rate.el).o,t=rate.t;
   let tier=0;for(let i=t.length-1;i>=0;i--){if(kwh>t[i]){tier=i+1;break;}}
   const basic=bas[Math.min(tier,bas.length-1)];
   let energy=0,rem=kwh;
@@ -37,150 +61,107 @@ function calcUnit(kwh,rate,isHigh,sk){
   if(rem>0)energy+=Math.round(rem*en[en.length-1]);
   const climate=Math.round(kwh*(rate.cl||0)),fuel=Math.round(kwh*(rate.fu||0));
   const sub=basic+energy+climate+fuel,vat=Math.round(sub*0.10),fund=Math.round(sub*0.037);
-  return{basic,energy,climate,fuel,sub,vat,fund,total:Math.round((sub+vat+fund)/10)*10,tier,en};
+  return{basic,energy,climate,fuel,sub,vat,fund,total:Math.round((sub+vat+fund)/10)*10,tier};
 }
 
-/* 공용전기 일반용전력 요금 */
 function calcCommon(cKwh,totalKwh,billingKw,gType,sk,rate){
   if(cKwh<=0)return{basic:0,energy:0,climate:0,fuel:0,elecFee:0,vat:0,fund:0,total:0,ratio:0,basicRate:0,ur:0};
-  const basicRate=GB[gType]||GB.high2;
-  const ur=(GR[gType]||GR.high2)[sk];
+  const basicRate=GB[gType]||GB.high2,ur=(GR[gType]||GR.high2)[sk];
   const ratio=totalKwh>0?cKwh/totalKwh:0;
-  const basic=Math.round(billingKw*ratio*basicRate);
-  const energy=Math.round(cKwh*ur);
-  const climate=Math.round(cKwh*(rate.cl||0));
-  const fuel=Math.round(cKwh*(rate.fu||0));
-  const elecFee=basic+energy+climate+fuel;
-  const vat=Math.round(elecFee*0.10),fund=Math.round(elecFee*0.032);
-  return{basic,energy,climate,fuel,elecFee,vat,fund,
-    total:Math.round((elecFee+vat+fund)/10)*10,
-    ratio:Math.round(ratio*10000)/100,basicRate,ur};
+  const basic=Math.round(billingKw*ratio*basicRate),energy=Math.round(cKwh*ur);
+  const climate=Math.round(cKwh*(rate.cl||0)),fuel=Math.round(cKwh*(rate.fu||0));
+  const elecFee=basic+energy+climate+fuel,vat=Math.round(elecFee*0.10),fund=Math.round(elecFee*0.032);
+  return{basic,energy,climate,fuel,elecFee,vat,fund,total:Math.round((elecFee+vat+fund)/10)*10,ratio:Math.round(ratio*10000)/100,basicRate,ur};
 }
 
-function n(v){return Number(String(v).replace(/,/g,""))||0;}
-function won(v){return Math.round(v).toLocaleString()+"원";}
-
 function Panel({children,style={}}){return <div style={{background:"#0d2137",borderRadius:12,border:"1px solid #2a4a7f",padding:"16px 18px",marginBottom:14,...style}}>{children}</div>;}
-function Tag({c,ch}){return <span style={{background:c+"22",border:`1px solid ${c}66`,borderRadius:5,padding:"2px 8px",fontSize:10,color:c,fontWeight:700}}>{ch}</span>;}
-function Row({label,a,b,bold=false,highlight=false}){
-  const diff=a-b;
+function Tag({c,ch}){return <span style={{background:c+"22",border:"1px solid "+c+"66",borderRadius:5,padding:"2px 8px",fontSize:10,color:c,fontWeight:700}}>{ch}</span>;}
+
+function NumInput({label,value,onChange,unit,color="#90caf9",min=0}){
   return(
-    <tr style={{background:bold?"#1a2a4a":"transparent",borderTop:"1px solid #1e3a5f"}}>
-      <td style={{padding:"6px 8px",color:bold?"#fff":"rgba(255,255,255,0.6)",fontWeight:bold?700:400,fontSize:11}}>{label}</td>
-      <td style={{padding:"6px 8px",textAlign:"right",color:"#90caf9",fontWeight:bold?800:400,fontSize:bold?13:11}}>{won(a)}</td>
-      <td style={{padding:"6px 8px",textAlign:"right",color:"#ef9a9a",fontWeight:bold?800:400,fontSize:bold?13:11}}>{won(b)}</td>
-      <td style={{padding:"6px 8px",textAlign:"right",color:diff>0?"#ef9a9a":diff<0?"#43a047":"#888",fontWeight:bold?800:600,fontSize:bold?13:11}}>
-        {diff>0?"▲":diff<0?"▼":""}{Math.abs(diff).toLocaleString()}원
-      </td>
-    </tr>
+    <div>
+      <div style={{fontSize:10,color:"rgba(255,255,255,0.45)",marginBottom:4}}>{label}</div>
+      <div style={{display:"flex",alignItems:"center",gap:6}}>
+        <input type="number" value={value} min={min} onChange={e=>onChange(Number(e.target.value))}
+          style={{flex:1,padding:"7px 10px",background:"#0a1e36",border:"2px solid "+color,borderRadius:8,color,fontSize:14,fontWeight:800,textAlign:"right",outline:"none"}}/>
+        {unit&&<span style={{fontSize:10,color:"rgba(255,255,255,0.35)",whiteSpace:"nowrap"}}>{unit}</span>}
+      </div>
+    </div>
   );
 }
 
-/* ══ 메인 앱 ══ */
-export default function App(){
+function App(){
   const today=new Date();
-  const defYm=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}`;
+  const defYm=today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0");
   const[ym,setYm]=useState("2026-07");
-  const[tab,setTab]=useState("g123");
-
-  /* 한전 사이버지점 자료 입력 (직접 입력 모드) */
-  const[mode,setMode]=useState("direct"); // direct | haneon
   const[unitCount,setUC]=useState(300);
   const[billingKw,setBK]=useState(2393);
   const[gType,setGT]=useState("high2");
-
-  /* 종합계약 데이터 (한전 사이버지점 자료) */
+  const[unitKwh,setUK]=useState(523053);
+  const[commonKwh,setCK]=useState(98106);
+  const[etcKwh,setEK]=useState(2453);
   const[jongBasic,setJB]=useState(7884430);
   const[jongEnergy,setJE]=useState(128128069);
   const[jongClimate,setJC]=useState(5590431);
   const[jongFuel,setJF]=useState(3105795);
-
-  /* 단일계약 비교 데이터 */
   const[danBasic,setDB]=useState(5149730);
   const[danEnergy,setDE]=useState(109211555);
   const[danClimate,setDC]=useState(5590431);
   const[danFuel,setDF]=useState(3105795);
-
-  /* 사용량 데이터 */
-  const[unitKwh,setUK]=useState(523053);   // 세대 총사용량
-  const[commonKwh,setCK]=useState(98106);   // 공용 사용량
-  const[etcKwh,setEK]=useState(2453);      // 자고객 등 기타
-
-  const rate=getRate(ym),sk=getSeason(ym);
-  const totalKwh=unitKwh+commonKwh+etcKwh; // 전체 사용량
-
-  /* ══ G-123 핵심 계산 ══ */
-
-  /* 종합계약 총요금 = 한전 실제 청구 합계 */
-  const jongElecFee=jongBasic+jongEnergy+jongClimate+jongFuel;
-  const jongVat=Math.round(jongElecFee*0.10);
-  const jongFund=Math.round(jongElecFee*0.037);
-  const jongTotal=Math.round((jongElecFee+jongVat+jongFund)/10)*10;
-
-  /* 단일계약 총요금 계산 (G-123 핵심!)
-     단일계약 = 전체 주택용고압 하나의 계량기
-     세대사용량 / 세대수 = 세대당 평균 → 고압으로 계산 × 세대수
-     BUT: 단일계약에서 공용은 별도 없음! 전체가 주택용고압 하나로 계산
-     즉, (세대사용량 + 공용사용량) ÷ 전체사용량으로 재배분 */
-
-  /* 방법: 한전이 제시한 단일계약 전기요금계 그대로 사용 */
-  const danElecFee=danBasic+danEnergy+danClimate+danFuel;
-  const danVat=Math.round(danElecFee*0.10);
-  const danFund=Math.round(danElecFee*0.037);
-  const danTotal=Math.round((danElecFee+danVat+danFund)/10)*10;
-
-  /* G-123 차액 */
-  const diff=jongTotal-danTotal;
-  const perUnit=unitCount>0?Math.round(diff/unitCount):0;
-
-  /* 공용전기 일반용 재계산 (검증용) */
-  const commonC=calcCommon(commonKwh,totalKwh,billingKw,gType,sk,rate);
-
-  /* 세대당 평균으로 단일 고압 계산 (검증) */
-  const avgKwh=unitCount>0?Math.round((unitKwh+commonKwh)/unitCount):0;
-  const unitH=calcUnit(avgKwh,rate,true,sk);
-  const calcDanTotal=unitH.total*unitCount;
-
   const[showDetail,setSD]=useState(false);
   const[showVerify,setSV]=useState(false);
 
-  return(
-    <div style={{fontFamily:"'Malgun Gothic','맑은 고딕',sans-serif",background:"#060f1e",minHeight:"100vh",color:"#e8eaf0",fontSize:13}}>
+  const rate=getRate(ym),sk=getSeason(ym);
+  const totalKwh=unitKwh+commonKwh+etcKwh;
+  const jongElecFee=jongBasic+jongEnergy+jongClimate+jongFuel;
+  const jongVat=Math.round(jongElecFee*0.10),jongFund=Math.round(jongElecFee*0.037);
+  const jongTotal=Math.round((jongElecFee+jongVat+jongFund)/10)*10;
+  const danElecFee=danBasic+danEnergy+danClimate+danFuel;
+  const danVat=Math.round(danElecFee*0.10),danFund=Math.round(danElecFee*0.037);
+  const danTotal=Math.round((danElecFee+danVat+danFund)/10)*10;
+  const diff=jongTotal-danTotal;
+  const perUnit=unitCount>0?Math.round(diff/unitCount):0;
+  const commonC=calcCommon(commonKwh,totalKwh,billingKw,gType,sk,rate);
+  const avgKwh=unitCount>0?Math.round((unitKwh+commonKwh)/unitCount):0;
+  const unitH=calcUnit(avgKwh,rate,true,sk);
 
-      {/* 헤더 */}
+  const gc=GRADE>=3?"#43a047":GRADE>=2?"#ffd600":"#90caf9";
+  const gn=GRADE>=3?"비즈니스회원":GRADE>=2?"특별회원":"일반회원";
+
+  return(
+    <div style={{background:"#060f1e",minHeight:"100vh",color:"#e8eaf0"}}>
       <div style={{background:"linear-gradient(135deg,#0a1628,#061020)",borderBottom:"2px solid #1e3a5f",padding:"12px 16px"}}>
         <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
-          <div style={{width:44,height:44,background:"linear-gradient(135deg,#1b5e20,#43a047)",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>🌿</div>
+          <div style={{width:44,height:44,background:"linear-gradient(135deg,#1b5e20,#43a047)",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>&#x1F33F;</div>
           <div style={{flex:1}}>
             <div style={{fontSize:15,fontWeight:900,color:"#fff"}}>GBS G-123 전기요금 정밀분석기</div>
-            <div style={{fontSize:10,color:"#43a047",fontWeight:700}}>한전 사이버지점 자료 직접 입력 → 종합 vs 단일 완벽 비교 | 한전 오류 수정 완성판</div>
+            <div style={{fontSize:10,color:"#43a047",fontWeight:700}}>한전 사이버지점 자료 직접 입력 -> 종합 vs 단일 완벽 비교 | 한전 오류 수정 완성판</div>
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+            <div style={{background:gc+"22",border:"1px solid "+gc+"55",borderRadius:8,padding:"4px 10px",fontSize:11,fontWeight:700,color:gc}}>{gn}</div>
             <input type="month" value={ym} min="2002-06" max="2099-12" onChange={e=>setYm(e.target.value)}
               style={{padding:"5px 8px",background:"#0a1e36",border:"2px solid #2a4a7f",borderRadius:8,color:"#90caf9",fontSize:12,fontWeight:700}}/>
             <span style={{background:"#1a3a6b",borderRadius:6,padding:"3px 9px",fontSize:10,color:"#90caf9",fontWeight:700}}>{rate.note}</span>
-            <span style={{fontSize:11,fontWeight:700,color:sk==="s"?"#f57c00":sk==="w"?"#42a5f5":"#43a047"}}>{sk==="s"?"☀️하계":sk==="w"?"❄️동계":"🌿평시"}</span>
           </div>
         </div>
       </div>
 
-      {/* 핵심 개념 배너 */}
-      <div style={{background:"linear-gradient(135deg,#1a0800,#0a1628)",borderBottom:"2px solid #f57c0033",padding:"12px 20px"}}>
+      <div style={{background:"linear-gradient(135deg,#1a0800,#0a1628)",borderBottom:"2px solid #f57c0033",padding:"12px 16px"}}>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,maxWidth:900,margin:"0 auto"}}>
           <div style={{background:"rgba(239,83,80,0.08)",border:"1px solid #ef535033",borderRadius:8,padding:"10px 14px"}}>
-            <div style={{fontSize:11,fontWeight:800,color:"#ef5350",marginBottom:6}}>❌ 한전의 오류 (기존 비교)</div>
-            <div style={{fontSize:10,color:"rgba(255,255,255,0.6)",lineHeight:1.9}}>
-              • 종합 세대요금 <b style={{color:"#ef9a9a"}}>단순 평균</b> vs 단일 세대요금<br/>
-              • 단일에서 공용전기를 <b style={{color:"#ef9a9a"}}>일반용으로 별도 계산</b> → 오류!<br/>
-              • 단일계약은 <b style={{color:"#ef9a9a"}}>하나의 계량기</b>가 전체를 측정하는 것
+            <div style={{fontSize:11,fontWeight:800,color:"#ef5350",marginBottom:6}}>X 한전의 오류 (기존 비교)</div>
+            <div style={{fontSize:10,color:"rgba(255,255,255,0.6)",lineHeight:2.0}}>
+              - 종합 세대요금 단순평균 vs 단일 세대요금<br/>
+              - 단일에서 공용전기를 일반용으로 별도 계산 오류!<br/>
+              - 단일계약은 하나의 계량기가 전체를 측정하는 것
             </div>
           </div>
           <div style={{background:"rgba(67,160,71,0.08)",border:"1px solid #43a04733",borderRadius:8,padding:"10px 14px"}}>
-            <div style={{fontSize:11,fontWeight:800,color:"#43a047",marginBottom:6}}>✅ GBS G-123 정확한 계산</div>
-            <div style={{fontSize:10,color:"rgba(255,255,255,0.6)",lineHeight:1.9}}>
-              • <b style={{color:"#a5d6a7"}}>종합 = Σ세대(주택용저압) + 공용분(일반용전력)</b><br/>
-              • <b style={{color:"#90caf9"}}>단일 = (세대+공용) 전체를 주택용고압 하나로 산출</b><br/>
-              • 한전 사이버지점 자료 그대로 입력 → <b style={{color:"#ffd600"}}>즉시 검증!</b>
+            <div style={{fontSize:11,fontWeight:800,color:"#43a047",marginBottom:6}}>O GBS G-123 정확한 계산</div>
+            <div style={{fontSize:10,color:"rgba(255,255,255,0.6)",lineHeight:2.0}}>
+              - 종합 = 세대합계(주택용저압) + 공용분(일반용전력)<br/>
+              - 단일 = (세대+공용) 전체를 주택용고압 하나로 산출<br/>
+              - 한전 사이버지점 자료 그대로 입력 -> 즉시 검증!
             </div>
           </div>
         </div>
@@ -188,61 +169,35 @@ export default function App(){
 
       <div style={{padding:"14px 16px",maxWidth:920,margin:"0 auto",boxSizing:"border-box"}}>
 
-        {/* 입력 섹션 */}
         <Panel style={{border:"2px solid #f57c0055"}}>
-          <div style={{fontSize:14,fontWeight:800,color:"#f57c00",marginBottom:14}}>
-            📋 한전 사이버지점 자료 입력
-            <span style={{fontSize:10,fontWeight:400,color:"rgba(255,255,255,0.4)",marginLeft:8}}>고객번호 입력 시 한전이 제공하는 모든 값을 그대로 입력</span>
-          </div>
-
-          {/* 기본 정보 */}
+          <div style={{fontSize:14,fontWeight:800,color:"#f57c00",marginBottom:14}}>한전 사이버지점 자료 입력</div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:14}}>
-            {[
-              {l:"총 세대 수",v:unitCount,set:setUC,unit:"세대",c:"#90caf9"},
-              {l:"요금적용전력",v:billingKw,set:setBK,unit:"kW",c:"#ce93d8"},
-            ].map(({l,v,set,unit,c})=>(
-              <div key={l}>
-                <div style={{fontSize:10,color:"rgba(255,255,255,0.45)",marginBottom:4}}>{l}</div>
-                <div style={{display:"flex",alignItems:"center",gap:6}}>
-                  <input type="number" value={v} min={0} onChange={e=>set(Number(e.target.value))}
-                    style={{flex:1,padding:"7px 10px",background:"#0a1e36",border:`2px solid ${c}`,borderRadius:8,color:c,fontSize:15,fontWeight:800,textAlign:"right"}}/>
-                  <span style={{fontSize:10,color:"rgba(255,255,255,0.35)"}}>{unit}</span>
-                </div>
-              </div>
-            ))}
+            <NumInput label="총 세대 수" value={unitCount} onChange={setUC} unit="세대" color="#90caf9"/>
+            <NumInput label="요금적용전력" value={billingKw} onChange={setBK} unit="kW" color="#ce93d8"/>
             <div>
               <div style={{fontSize:10,color:"rgba(255,255,255,0.45)",marginBottom:4}}>공용전기 계약종별</div>
               <select value={gType} onChange={e=>setGT(e.target.value)}
-                style={{width:"100%",padding:"8px 10px",background:"#0a1e36",border:"2px solid #ffcc80",borderRadius:8,color:"#ffcc80",fontSize:12,fontWeight:700}}>
-                <option value="high2">일반용 고압2 (8,230원/kW) ★아파트</option>
+                style={{width:"100%",padding:"8px 10px",background:"#0a1e36",border:"2px solid #ffcc80",borderRadius:8,color:"#ffcc80",fontSize:11,fontWeight:700,outline:"none"}}>
+                <option value="high2">일반용 고압2 (8,230원/kW) 아파트</option>
                 <option value="high1">일반용 고압1 (7,220원/kW)</option>
                 <option value="low">일반용 저압 (6,160원/kW)</option>
               </select>
             </div>
           </div>
 
-          {/* 사용량 */}
-          <div style={{background:"rgba(144,202,249,0.05)",border:"1px solid #90caf922",borderRadius:8,padding:"12px 14px",marginBottom:14}}>
-            <div style={{fontSize:11,fontWeight:700,color:"#90caf9",marginBottom:10}}>① 사용량 정보 (한전 사이버지점 자료)</div>
+          <div style={{background:"rgba(144,202,249,0.05)",border:"1px solid #90caf922",borderRadius:8,padding:"12px",marginBottom:14}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#90caf9",marginBottom:10}}>사용량 정보</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-              {[
-                {l:"세대사용량",v:unitKwh,set:setUK,c:"#90caf9"},
-                {l:"공용사용량",v:commonKwh,set:setCK,c:"#ffcc80"},
-                {l:"자고객/기타",v:etcKwh,set:setEK,c:"#ce93d8"},
-              ].map(({l,v,set,c})=>(
-                <div key={l}>
-                  <div style={{fontSize:10,color:"rgba(255,255,255,0.45)",marginBottom:4}}>{l} (kWh)</div>
-                  <input type="number" value={v} min={0} onChange={e=>set(Number(e.target.value))}
-                    style={{width:"100%",padding:"7px 10px",background:"#0a1e36",border:`2px solid ${c}`,borderRadius:8,color:c,fontSize:14,fontWeight:800,textAlign:"right"}}/>
-                </div>
-              ))}
+              <NumInput label="세대사용량 (kWh)" value={unitKwh} onChange={setUK} color="#90caf9"/>
+              <NumInput label="공용사용량 (kWh)" value={commonKwh} onChange={setCK} color="#ffcc80"/>
+              <NumInput label="자고객/기타 (kWh)" value={etcKwh} onChange={setEK} color="#ce93d8"/>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginTop:10}}>
-              {[["총사용량(①+②+③)",(unitKwh+commonKwh+etcKwh).toLocaleString()+"kWh","#43a047"],
-                ["세대당 평균",Math.round(unitKwh/Math.max(1,unitCount)).toLocaleString()+"kWh","#f57c00"],
-                ["단일 세대당 평균",Math.round((unitKwh+commonKwh)/Math.max(1,unitCount)).toLocaleString()+"kWh","#ef9a9a"]
+              {[["총사용량",(totalKwh).toLocaleString()+"kWh","#43a047"],
+                ["세대당평균(종합)",Math.round(unitKwh/Math.max(1,unitCount)).toLocaleString()+"kWh","#90caf9"],
+                ["세대당평균(단일)",Math.round((unitKwh+commonKwh)/Math.max(1,unitCount)).toLocaleString()+"kWh","#ef9a9a"]
               ].map(([l,v,c])=>(
-                <div key={l} style={{background:c+"12",border:`1px solid ${c}33`,borderRadius:7,padding:"7px",textAlign:"center"}}>
+                <div key={l} style={{background:c+"12",border:"1px solid "+c+"33",borderRadius:7,padding:"7px",textAlign:"center"}}>
                   <div style={{fontSize:9,color:"rgba(255,255,255,0.4)"}}>{l}</div>
                   <div style={{fontSize:12,fontWeight:800,color:c}}>{v}</div>
                 </div>
@@ -250,15 +205,14 @@ export default function App(){
             </div>
           </div>
 
-          {/* 종합계약 데이터 */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:10}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
             <div style={{background:"rgba(144,202,249,0.05)",border:"1px solid #90caf922",borderRadius:8,padding:"12px"}}>
-              <div style={{fontSize:11,fontWeight:700,color:"#90caf9",marginBottom:10}}>② 종합계약 요금 (한전 실제 청구)</div>
-              {[{l:"기본요금",v:jongBasic,set:setJB},{l:"전력량요금",v:jongEnergy,set:setJE},{l:"기후환경요금",v:jongClimate,set:setJC},{l:"연료비조정액",v:jongFuel,set:setJF}].map(({l,v,set})=>(
+              <div style={{fontSize:11,fontWeight:700,color:"#90caf9",marginBottom:10}}>종합계약 요금 (한전 실제 청구)</div>
+              {[["기본요금",jongBasic,setJB],["전력량요금",jongEnergy,setJE],["기후환경요금",jongClimate,setJC],["연료비조정액",jongFuel,setJF]].map(([l,v,set])=>(
                 <div key={l} style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
                   <span style={{fontSize:10,color:"rgba(255,255,255,0.4)",width:80,flexShrink:0}}>{l}</span>
                   <input type="number" value={v} min={0} onChange={e=>set(Number(e.target.value))}
-                    style={{flex:1,padding:"5px 8px",background:"#0a1e36",border:"1px solid #90caf944",borderRadius:6,color:"#90caf9",fontSize:12,fontWeight:700,textAlign:"right"}}/>
+                    style={{flex:1,padding:"5px 8px",background:"#0a1e36",border:"1px solid #90caf944",borderRadius:6,color:"#90caf9",fontSize:12,fontWeight:700,textAlign:"right",outline:"none"}}/>
                 </div>
               ))}
               <div style={{background:"#90caf922",borderRadius:6,padding:"6px 10px",display:"flex",justifyContent:"space-between",marginTop:6}}>
@@ -266,14 +220,13 @@ export default function App(){
                 <span style={{fontSize:13,fontWeight:800,color:"#90caf9"}}>{jongElecFee.toLocaleString()}원</span>
               </div>
             </div>
-
             <div style={{background:"rgba(239,154,154,0.05)",border:"1px solid #ef9a9a22",borderRadius:8,padding:"12px"}}>
-              <div style={{fontSize:11,fontWeight:700,color:"#ef9a9a",marginBottom:10}}>③ 단일계약 비교 데이터 (한전 제시)</div>
-              {[{l:"기본요금",v:danBasic,set:setDB},{l:"전력량요금",v:danEnergy,set:setDE},{l:"기후환경요금",v:danClimate,set:setDC},{l:"연료비조정액",v:danFuel,set:setDF}].map(({l,v,set})=>(
+              <div style={{fontSize:11,fontWeight:700,color:"#ef9a9a",marginBottom:10}}>단일계약 비교 데이터 (한전 제시)</div>
+              {[["기본요금",danBasic,setDB],["전력량요금",danEnergy,setDE],["기후환경요금",danClimate,setDC],["연료비조정액",danFuel,setDF]].map(([l,v,set])=>(
                 <div key={l} style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
                   <span style={{fontSize:10,color:"rgba(255,255,255,0.4)",width:80,flexShrink:0}}>{l}</span>
                   <input type="number" value={v} min={0} onChange={e=>set(Number(e.target.value))}
-                    style={{flex:1,padding:"5px 8px",background:"#0a1e36",border:"1px solid #ef9a9a44",borderRadius:6,color:"#ef9a9a",fontSize:12,fontWeight:700,textAlign:"right"}}/>
+                    style={{flex:1,padding:"5px 8px",background:"#0a1e36",border:"1px solid #ef9a9a44",borderRadius:6,color:"#ef9a9a",fontSize:12,fontWeight:700,textAlign:"right",outline:"none"}}/>
                 </div>
               ))}
               <div style={{background:"#ef9a9a22",borderRadius:6,padding:"6px 10px",display:"flex",justifyContent:"space-between",marginTop:6}}>
@@ -284,30 +237,25 @@ export default function App(){
           </div>
         </Panel>
 
-        {/* ★ G-123 핵심 결과 */}
         <div style={{background:"linear-gradient(135deg,#0a0e1a,#0d1e3a)",borderRadius:16,border:"3px solid #ffd600",padding:"20px",marginBottom:14,boxShadow:"0 0 40px rgba(255,214,0,0.15)"}}>
           <div style={{fontSize:10,color:"#ffd600",letterSpacing:4,fontWeight:700,textAlign:"center",marginBottom:4}}>GBS G-123 핵심 분석 결과</div>
           <div style={{fontSize:10,color:"rgba(255,255,255,0.35)",textAlign:"center",marginBottom:16}}>한전 실제 자료 기반 | 종합(주택용저압+공용일반용) vs 단일(전체주택용고압)</div>
 
           <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:12,alignItems:"stretch",marginBottom:16}}>
-
-            {/* 종합계약 */}
             <div style={{background:"rgba(144,202,249,0.07)",border:"2px solid #90caf944",borderRadius:12,padding:"16px",textAlign:"center"}}>
               <div style={{fontSize:12,fontWeight:800,color:"#90caf9",marginBottom:3}}>종합계약 (저압)</div>
               <div style={{fontSize:9,color:"rgba(255,255,255,0.4)",marginBottom:12,lineHeight:1.7}}>세대: 주택용전력 저압<br/>공용: 일반용전력 별도 청구</div>
               <div style={{fontSize:10,color:"rgba(255,255,255,0.4)"}}>전기요금계</div>
-              <div style={{fontSize:22,fontWeight:800,color:"#90caf9",marginBottom:4}}>{jongElecFee.toLocaleString()}원</div>
-              <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginBottom:10}}>기본 {jongBasic.toLocaleString()} + 전력량 {jongEnergy.toLocaleString()}</div>
+              <div style={{fontSize:20,fontWeight:800,color:"#90caf9",marginBottom:4}}>{jongElecFee.toLocaleString()}원</div>
               <div style={{height:1,background:"rgba(255,255,255,0.08)",marginBottom:10}}/>
-              <div style={{fontSize:10,color:"rgba(255,255,255,0.4)"}}>부가세+기금 포함 최종</div>
+              <div style={{fontSize:10,color:"rgba(255,255,255,0.4)"}}>최종 청구요금</div>
               <div style={{fontSize:28,fontWeight:900,color:"#fff"}}>{jongTotal.toLocaleString()}<span style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginLeft:3}}>원</span></div>
               <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginTop:4}}>세대당 {Math.round(jongTotal/unitCount).toLocaleString()}원</div>
             </div>
 
-            {/* 차액 중앙 */}
             <div style={{textAlign:"center",display:"flex",flexDirection:"column",justifyContent:"center",minWidth:100,gap:8}}>
               <div style={{fontSize:9,color:"rgba(255,255,255,0.35)"}}>단지 전체 차액</div>
-              <div style={{fontSize:34,fontWeight:900,color:diff>0?"#ef9a9a":diff<0?"#43a047":"#fff",lineHeight:1}}>{diff>0?"▲":diff<0?"▼":""}{Math.abs(diff).toLocaleString()}</div>
+              <div style={{fontSize:32,fontWeight:900,color:diff>0?"#ef9a9a":diff<0?"#43a047":"#fff",lineHeight:1}}>{diff>0?"▲":diff<0?"▼":""}{Math.abs(diff).toLocaleString()}</div>
               <div style={{fontSize:12,color:"rgba(255,255,255,0.35)"}}>원/월</div>
               <div style={{height:1,background:"rgba(255,255,255,0.08)"}}/>
               <div style={{fontSize:9,color:"rgba(255,255,255,0.35)"}}>세대당 차액</div>
@@ -317,134 +265,127 @@ export default function App(){
               <div style={{fontSize:16,fontWeight:800,color:"#ffd600"}}>{(Math.abs(diff)*12).toLocaleString()}원</div>
             </div>
 
-            {/* 단일계약 */}
             <div style={{background:"rgba(239,154,154,0.07)",border:"2px solid #ef9a9a44",borderRadius:12,padding:"16px",textAlign:"center"}}>
               <div style={{fontSize:12,fontWeight:800,color:"#ef9a9a",marginBottom:3}}>단일계약 (고압)</div>
               <div style={{fontSize:9,color:"rgba(255,255,255,0.4)",marginBottom:12,lineHeight:1.7}}>전체(세대+공용) 하나의 계량기<br/>주택용전력 고압 단일 산출</div>
               <div style={{fontSize:10,color:"rgba(255,255,255,0.4)"}}>전기요금계</div>
-              <div style={{fontSize:22,fontWeight:800,color:"#ef9a9a",marginBottom:4}}>{danElecFee.toLocaleString()}원</div>
-              <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginBottom:10}}>기본 {danBasic.toLocaleString()} + 전력량 {danEnergy.toLocaleString()}</div>
+              <div style={{fontSize:20,fontWeight:800,color:"#ef9a9a",marginBottom:4}}>{danElecFee.toLocaleString()}원</div>
               <div style={{height:1,background:"rgba(255,255,255,0.08)",marginBottom:10}}/>
-              <div style={{fontSize:10,color:"rgba(255,255,255,0.4)"}}>부가세+기금 포함 최종</div>
+              <div style={{fontSize:10,color:"rgba(255,255,255,0.4)"}}>최종 청구요금</div>
               <div style={{fontSize:28,fontWeight:900,color:"#fff"}}>{danTotal.toLocaleString()}<span style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginLeft:3}}>원</span></div>
               <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginTop:4}}>세대당 {Math.round(danTotal/unitCount).toLocaleString()}원</div>
             </div>
           </div>
 
-          {/* 결론 */}
-          <div style={{background:diff>0?"rgba(239,83,80,0.12)":"rgba(67,160,71,0.12)",border:`2px solid ${diff>0?"#ef535055":"#43a04755"}`,borderRadius:12,padding:"14px 16px",textAlign:"center"}}>
+          <div style={{background:diff>0?"rgba(239,83,80,0.12)":"rgba(67,160,71,0.12)",border:"2px solid "+(diff>0?"#ef535055":"#43a04755"),borderRadius:12,padding:"14px 16px",textAlign:"center"}}>
             <div style={{fontSize:15,fontWeight:900,color:diff>0?"#ef9a9a":"#43a047",marginBottom:6}}>
-              {diff>0?"⚠️ 종합계약이 단일계약보다 비쌉니다!":"✅ 종합계약이 단일계약보다 유리합니다!"}
+              {diff>0?"종합계약이 단일계약보다 비쌉니다!":"종합계약이 단일계약보다 유리합니다!"}
             </div>
             <div style={{fontSize:12,color:"rgba(255,255,255,0.65)",lineHeight:2.0}}>
               세대당 월 <b style={{color:"#ffd600",fontSize:14}}>{Math.abs(perUnit).toLocaleString()}원</b> 차액 |
               단지 전체 월 <b style={{color:"#ffd600",fontSize:14}}>{Math.abs(diff).toLocaleString()}원</b> |
               연간 <b style={{color:"#ffd600",fontSize:14}}>{(Math.abs(diff)*12).toLocaleString()}원</b>
             </div>
-            <div style={{fontSize:10,color:"rgba(255,255,255,0.35)",marginTop:6}}>
-              CO₂ 환산: 세대사용량 {(unitKwh*CO2/1000).toFixed(1)}tCO₂ | 총사용량 {(totalKwh*CO2/1000).toFixed(1)}tCO₂
-            </div>
           </div>
         </div>
 
-        {/* 상세 비교표 */}
         <button onClick={()=>setSD(v=>!v)} style={{width:"100%",padding:"11px",borderRadius:10,border:"1px solid #2a4a7f",background:"#0a1628",color:"#90caf9",fontWeight:700,fontSize:12,cursor:"pointer",marginBottom:10}}>
-          📋 전기요금 상세 비교표 {showDetail?"▲ 닫기":"▼ 펼치기"}
+          항목별 상세 비교표 {showDetail?"닫기":"펼치기"}
         </button>
 
         {showDetail&&(
-          <Panel style={{border:"2px solid #ffd60033"}}>
+          <div style={{background:"#0d2137",borderRadius:12,border:"2px solid #ffd60033",padding:"16px",marginBottom:14}}>
             <div style={{fontSize:13,fontWeight:800,color:"#ffd600",marginBottom:12}}>단지 전체 전기요금 항목별 비교</div>
-            <div style={{overflowX:"auto"}}>
-              <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
-                <thead>
-                  <tr style={{background:"#061428"}}>
-                    {["항목","종합계약(저압)","단일계약(고압)","차액"].map(h=>(
-                      <th key={h} style={{padding:"8px",textAlign:h==="항목"?"left":"right",color:"rgba(255,255,255,0.4)",fontSize:10,borderBottom:"1px solid #1e3a5f"}}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <Row label="기본요금" a={jongBasic} b={danBasic}/>
-                  <Row label="전력량요금" a={jongEnergy} b={danEnergy}/>
-                  <Row label="기후환경요금" a={jongClimate} b={danClimate}/>
-                  <Row label="연료비조정액" a={jongFuel} b={danFuel}/>
-                  <Row label="전기요금계" a={jongElecFee} b={danElecFee} bold/>
-                  <Row label="부가가치세(10%)" a={jongVat} b={danVat}/>
-                  <Row label="전력산업기반기금(3.7%)" a={jongFund} b={danFund}/>
-                  <Row label="최종 청구요금" a={jongTotal} b={danTotal} bold/>
-                  <Row label="세대당 환산" a={Math.round(jongTotal/unitCount)} b={Math.round(danTotal/unitCount)} bold/>
-                </tbody>
-              </table>
-            </div>
-          </Panel>
+            <table>
+              <thead>
+                <tr style={{background:"#061428"}}>
+                  {["항목","종합계약(저압)","단일계약(고압)","차액"].map(h=>(
+                    <th key={h} style={{textAlign:h==="항목"?"left":"right",color:"rgba(255,255,255,0.4)",fontSize:10,borderBottom:"1px solid #1e3a5f"}}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["기본요금",jongBasic,danBasic,false],
+                  ["전력량요금",jongEnergy,danEnergy,false],
+                  ["기후환경요금",jongClimate,danClimate,false],
+                  ["연료비조정액",jongFuel,danFuel,false],
+                  ["전기요금계",jongElecFee,danElecFee,true],
+                  ["부가가치세(10%)",jongVat,danVat,false],
+                  ["전력기반기금(3.7%)",jongFund,danFund,false],
+                  ["최종 청구요금",jongTotal,danTotal,true],
+                  ["세대당 환산",Math.round(jongTotal/unitCount),Math.round(danTotal/unitCount),true],
+                ].map(([l,a,b,bold],i)=>{
+                  const d=a-b;
+                  return(
+                    <tr key={i} style={{background:bold?"#1a2a4a":i%2?"#0a1628":"#0d1e36",borderTop:"1px solid #1e3a5f"}}>
+                      <td style={{color:bold?"#fff":"rgba(255,255,255,0.6)",fontWeight:bold?700:400,fontSize:11}}>{l}</td>
+                      <td style={{textAlign:"right",color:"#90caf9",fontWeight:bold?800:400,fontSize:bold?13:11}}>{a.toLocaleString()}원</td>
+                      <td style={{textAlign:"right",color:"#ef9a9a",fontWeight:bold?800:400,fontSize:bold?13:11}}>{b.toLocaleString()}원</td>
+                      <td style={{textAlign:"right",color:d>0?"#ef9a9a":d<0?"#43a047":"#888",fontWeight:bold?800:600,fontSize:bold?13:11}}>{d>0?"▲":d<0?"▼":""}{Math.abs(d).toLocaleString()}원</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
 
-        {/* G-123 검증 */}
         <button onClick={()=>setSV(v=>!v)} style={{width:"100%",padding:"11px",borderRadius:10,border:"1px solid #43a04744",background:"rgba(67,160,71,0.05)",color:"#43a047",fontWeight:700,fontSize:12,cursor:"pointer",marginBottom:14}}>
-          🔍 G-123 검증 — 공용전기 재계산 {showVerify?"▲ 닫기":"▼ 펼치기"}
+          G-123 공용전기 재계산 검증 {showVerify?"닫기":"펼치기"}
         </button>
 
         {showVerify&&(
-          <Panel style={{border:"2px solid #43a04744"}}>
-            <div style={{fontSize:13,fontWeight:800,color:"#43a047",marginBottom:4}}>공용전기(일반용전력) 재계산 검증</div>
-            <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginBottom:12}}>
+          <div style={{background:"#0d2137",borderRadius:12,border:"2px solid #43a04744",padding:"16px",marginBottom:14}}>
+            <div style={{fontSize:13,fontWeight:800,color:"#43a047",marginBottom:12}}>공용전기(일반용전력) G-123 재계산 검증</div>
+            <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginBottom:10}}>
               총사용량({totalKwh.toLocaleString()}kWh) 중 공용({commonKwh.toLocaleString()}kWh) | 배분비율: {(commonKwh/totalKwh*100).toFixed(2)}%
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:10}}>
               {[
-                ["기본요금 산출식",`${billingKw}kW × ${(commonKwh/totalKwh*100).toFixed(2)}% × ${(GB[gType]||GB.high2).toLocaleString()}원/kW`,commonC.basic],
-                ["사용량요금 산출식",`${commonKwh.toLocaleString()}kWh × ${commonC.ur}원/kWh`,commonC.energy],
-                ["기후환경요금",`${commonKwh.toLocaleString()}kWh × ${rate.cl||0}원`,commonC.climate],
-                ["연료비조정액",`${commonKwh.toLocaleString()}kWh × ${rate.fu||0}원`,commonC.fuel],
+                ["기본요금",billingKw+"kW x "+(commonKwh/totalKwh*100).toFixed(2)+"% x "+(GB[gType]||GB.high2).toLocaleString()+"원/kW",commonC.basic],
+                ["사용량요금",commonKwh.toLocaleString()+"kWh x "+commonC.ur+"원/kWh",commonC.energy],
+                ["기후환경요금",commonKwh.toLocaleString()+"kWh x "+(rate.cl||0)+"원",commonC.climate],
+                ["연료비조정액",commonKwh.toLocaleString()+"kWh x "+(rate.fu||0)+"원",commonC.fuel],
               ].map(([l,f,v])=>(
                 <div key={l} style={{background:"#061428",borderRadius:8,padding:"10px 12px",border:"1px solid #43a04733"}}>
-                  <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginBottom:4}}>{l}</div>
-                  <div style={{fontSize:10,color:"rgba(255,255,255,0.5)",marginBottom:4}}>{f}</div>
+                  <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginBottom:2}}>{l}</div>
+                  <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginBottom:4}}>{f}</div>
                   <div style={{fontSize:14,fontWeight:800,color:"#43a047"}}>{v.toLocaleString()}원</div>
                 </div>
               ))}
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:10}}>
-              {[
-                ["전기요금계",commonC.elecFee,"#ffcc80"],
-                ["부가세(10%)",commonC.vat,"rgba(255,255,255,0.4)"],
-                ["기금(3.2%)",commonC.fund,"rgba(255,255,255,0.4)"],
-              ].map(([l,v,c])=>(
-                <div key={l} style={{textAlign:"center",background:"rgba(255,255,255,0.03)",borderRadius:7,padding:"8px"}}>
-                  <div style={{fontSize:9,color:"rgba(255,255,255,0.4)"}}>{l}</div>
-                  <div style={{fontSize:13,fontWeight:700,color:c}}>{v.toLocaleString()}원</div>
-                </div>
-              ))}
-            </div>
-            <div style={{background:"#ffcc80",borderRadius:8,padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <div style={{background:"#ffcc80",borderRadius:8,padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
               <span style={{fontSize:12,fontWeight:700,color:"#3d2a00"}}>공용전기 G-123 재계산 청구요금</span>
               <span style={{fontSize:22,fontWeight:900,color:"#3d2a00"}}>{commonC.total.toLocaleString()}원</span>
             </div>
-
-            {/* 단일계약 세대당 평균 검증 */}
             <div style={{background:"rgba(239,154,154,0.08)",border:"1px solid #ef9a9a33",borderRadius:8,padding:"12px"}}>
-              <div style={{fontSize:11,fontWeight:700,color:"#ef9a9a",marginBottom:8}}>단일계약 세대당 평균 고압 계산 검증</div>
+              <div style={{fontSize:11,fontWeight:700,color:"#ef9a9a",marginBottom:6}}>단일계약 세대당 평균 고압 계산 검증</div>
               <div style={{fontSize:10,color:"rgba(255,255,255,0.5)",marginBottom:4}}>
-                단일세대평균 = (세대{unitKwh.toLocaleString()} + 공용{commonKwh.toLocaleString()}) ÷ {unitCount}세대 = {avgKwh.toLocaleString()}kWh/세대
+                단일세대평균 = (세대{unitKwh.toLocaleString()} + 공용{commonKwh.toLocaleString()}) / {unitCount}세대 = {avgKwh.toLocaleString()}kWh/세대
               </div>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span style={{fontSize:11,color:"rgba(255,255,255,0.5)"}}>고압 {avgKwh.toLocaleString()}kWh × {unitCount}세대 = </span>
-                <span style={{fontSize:16,fontWeight:800,color:"#ef9a9a"}}>{calcDanTotal.toLocaleString()}원</span>
+                <span style={{fontSize:11,color:"rgba(255,255,255,0.5)"}}>고압 {avgKwh.toLocaleString()}kWh x {unitCount}세대 = </span>
+                <span style={{fontSize:16,fontWeight:800,color:"#ef9a9a"}}>{(unitH.total*unitCount).toLocaleString()}원</span>
               </div>
               <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginTop:4}}>
-                ※ 한전 제시 단일계약 전기요금계({danElecFee.toLocaleString()}원)와 차이 = {Math.abs(calcDanTotal-danElecFee).toLocaleString()}원
+                한전 제시 단일계약 전기요금계({danElecFee.toLocaleString()}원)와 차이 = {Math.abs(unitH.total*unitCount-danElecFee).toLocaleString()}원
               </div>
             </div>
-          </Panel>
+          </div>
         )}
 
-        {/* 하단 */}
         <div style={{textAlign:"center",padding:"14px",fontSize:10,color:"rgba(255,255,255,0.2)",borderTop:"1px solid #1e3a5f"}}>
-          GBS G-123 | 한전 사이버지점 자료 직접 입력 방식 | CO₂ {CO2}kg/kWh | ojs.co.kr<br/>
-          "1kWh의 가치를 국민과 함께" — GBS종합에너지관리 국민BIZ
+          GBS G-123 | 한전 사이버지점 자료 직접 입력 방식 | CO2 {CO2}kg/kWh | ojs.co.kr<br/>
+          "1kWh의 가치를 국민과 함께" - GBS종합에너지관리 국민BIZ
         </div>
       </div>
     </div>
   );
 }
+
+const root=ReactDOM.createRoot(document.getElementById("gbs-root"));
+root.render(React.createElement(App,null));
+</script>
+</body>
+</html>
