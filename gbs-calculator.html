@@ -8,7 +8,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
   :root{
     --ink:#12233F;
@@ -196,13 +195,79 @@
 
   footer{ margin-top:36px; padding-top:16px; border-top:1px solid var(--rule);
     font-size:11.5px; color:var(--ink-soft); line-height:1.7;}
+
+  /* Hero result card - dark theme */
+  .hero-result{
+    background: radial-gradient(ellipse at top, #241a3f 0%, #140f22 72%);
+    border: 2px solid #F2C94C; border-radius: 14px; padding: 30px 26px;
+    box-shadow: 0 0 44px rgba(242,201,76,0.14), inset 0 1px 0 rgba(255,255,255,0.05);
+    color: #E9E4F5;
+  }
+  .hero-title{ text-align:center; font-family:'Noto Serif KR',serif; font-weight:700;
+    font-size:21px; letter-spacing:.02em; color:#F5E7C8; }
+  .hero-sub{ text-align:center; font-size:12px; color:#9C93B8; margin-top:6px;
+    margin-bottom:26px; font-family:'JetBrains Mono',monospace; }
+  .hero-grid{ display:grid; grid-template-columns:1fr auto 1fr; gap:18px; align-items:stretch; }
+  @media(max-width:820px){ .hero-grid{ grid-template-columns:1fr; } }
+  .hero-card{ border-radius:10px; padding:22px 20px; }
+  .hero-card.teal{ background:rgba(94,234,212,0.06); border:1px solid rgba(94,234,212,0.35); }
+  .hero-card.copper{ background:rgba(251,191,119,0.06); border:1px solid rgba(251,191,119,0.35); }
+  .hero-card .hc-title{ font-family:'Noto Serif KR',serif; font-weight:700; font-size:17px; text-align:center; }
+  .hero-card.teal .hc-title{ color:#5EEAD4; }
+  .hero-card.copper .hc-title{ color:#FBBF77; }
+  .hero-card .hc-sub{ text-align:center; font-size:11px; color:#9C93B8; margin-top:3px; line-height:1.7; }
+  .hero-card .hc-block{ text-align:center; margin-top:18px; }
+  .hero-card .hc-label{ font-size:11.5px; color:#9C93B8; margin-bottom:7px; }
+  .hero-card .hc-value{ font-family:'JetBrains Mono',monospace; font-size:25px; font-weight:700; }
+  .hero-card.teal .hc-value{ color:#8FF5E1; }
+  .hero-card.copper .hc-value{ color:#FFD19B; }
+  .hero-card .hc-note{ font-size:10.5px; color:#786E99; margin-top:5px; }
+  .hero-card .hc-divider{ border-top:1px dashed rgba(255,255,255,0.14); margin:18px 0; }
+  .hero-card .hc-final-label{ font-size:11.5px; color:#9C93B8; text-align:center; }
+  .hero-card .hc-final-value{ font-family:'JetBrains Mono',monospace; font-size:31px; font-weight:800;
+    text-align:center; margin-top:7px; }
+  .hero-card.teal .hc-final-value{ color:#B8FFF0; }
+  .hero-card.copper .hc-final-value{ color:#FFE1BE; }
+  .hero-card .hc-per{ text-align:center; font-size:12px; color:#9C93B8; margin-top:7px;
+    font-family:'JetBrains Mono',monospace; }
+  .hero-center{ display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:18px 10px; min-width:170px; }
+  .hero-center .hc-tri{ font-size:32px; line-height:1; color:#FF6B9D; }
+  .hero-center .hc-diff{ font-family:'JetBrains Mono',monospace; font-size:29px; font-weight:800;
+    margin-top:4px; color:#FF6B9D; }
+  .hero-center .hc-diff-unit{ font-size:11px; color:#9C93B8; margin-top:3px; }
+  .hero-center .hc-sep{ width:70%; border-top:1px solid rgba(255,255,255,0.12); margin:16px 0; }
+  .hero-center .hc-sub-label{ font-size:11px; color:#9C93B8; }
+  .hero-center .hc-sub-value{ font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:700;
+    color:#E9E4F5; margin-top:3px; margin-bottom:12px; }
+  .hero-banner{ margin-top:24px; border-radius:8px; padding:15px 18px; text-align:center; }
+  .hero-banner.warn{ background:rgba(255,107,157,0.1); border:1px solid rgba(255,107,157,0.35); }
+  .hero-banner.good{ background:rgba(134,239,172,0.1); border:1px solid rgba(134,239,172,0.35); }
+  .hero-banner .hb-title{ font-weight:700; font-size:14.5px; }
+  .hero-banner.warn .hb-title{ color:#FF9DBE; }
+  .hero-banner.good .hb-title{ color:#86EFAC; }
+  .hero-banner .hb-detail{ font-size:12px; color:#B8AED8; margin-top:7px; font-family:'JetBrains Mono',monospace; }
+  .hero-empty{ text-align:center; font-size:12px; color:#786E99; margin-top:6px; }
+
+  .live-hint{
+    font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--green);
+    background:var(--green-soft); display:inline-block; padding:4px 9px; margin-top:8px;
+    border-radius:3px;
+  }
+  .live-tick{
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft);
+  }
+  .live-tick b{ color:var(--ink); }
+  @keyframes flashUpdate{ 0%{ background:#FCEFC7; } 100%{ background:transparent; } }
+  .flash{ animation: flashUpdate 700ms ease-out; }
 </style>
 </head>
 <body>
 <div id="root"></div>
 
-<script type="text/babel">
-const { useState, useMemo } = React;
+<script data-gbs-app="1">
+const { useState, useMemo, useRef, useEffect } = React;
+const h = React.createElement;
 
 function toNum(v){
   if (v === "" || v === null || v === undefined) return 0;
@@ -217,42 +282,86 @@ function fmt1(n){
   return (Math.round(n*10)/10).toLocaleString('ko-KR');
 }
 
-function Field({label, unit, value, onChange, accent}){
-  return (
-    <div className={"field" + (accent ? " accent-"+accent : "")}>
-      <label>{label} {unit && <span className="unit">({unit})</span>}</label>
-      <div className="input-wrap">
-        <input
-          inputMode="decimal"
-          value={value}
-          onChange={e=>onChange(e.target.value)}
-          onBlur={e=>onChange(String(toNum(e.target.value)))}
-        />
-      </div>
-    </div>
+function Field(props){
+  const { label, unit, value, onChange, accent, hint } = props;
+  return h('div', {className:"field" + (accent ? " accent-"+accent : "")},
+    h('label', null, label, unit ? h('span', {className:"unit"}, " (" + unit + ")") : null),
+    h('div', {className:"input-wrap"},
+      h('input', {
+        inputMode:"decimal",
+        value: value,
+        onChange: function(e){ onChange(e.target.value); }
+      })
+    ),
+    hint ? h('div', {className:"live-hint"}, hint) : null
+  );
+}
+
+function FlashValue(props){
+  // wraps a value so it visibly flashes whenever it changes, proving live recalculation
+  const ref = useRef(null);
+  const prev = useRef(props.value);
+  useEffect(function(){
+    if (prev.current !== props.value && ref.current){
+      ref.current.classList.remove('flash');
+      // force reflow to restart animation
+      void ref.current.offsetWidth;
+      ref.current.classList.add('flash');
+    }
+    prev.current = props.value;
+  }, [props.value]);
+  return h('span', { ref: ref, className: props.className || "" }, props.children);
+}
+
+function DiagnosticPanel(){
+  const [count, setCount] = useState(0);
+  const [info, setInfo] = useState(null);
+  useEffect(function(){
+    setInfo({
+      reactVersion: React.version || "알 수 없음",
+      rootElCount: document.querySelectorAll('#root').length,
+      scriptTagCount: document.querySelectorAll('script').length,
+      appScriptCount: document.querySelectorAll('script[data-gbs-app]').length
+    });
+  }, []);
+  const dupWarning = info && (info.rootElCount > 1 || info.appScriptCount > 1);
+  return h('div', {style:{
+    background: dupWarning ? "#F7E7E7" : "#E4F2E9",
+    border: "1px solid " + (dupWarning ? "#B23A3A" : "#1F7A4C"),
+    padding: "14px 18px", marginBottom: "18px", fontFamily: "'JetBrains Mono',monospace", fontSize: "12px"
+  }},
+    h('div', {style:{fontWeight:700, marginBottom:"8px"}}, dupWarning ? "⚠ 진단: 중복 삽입 의심" : "✓ 진단: 정상 작동 확인용 패널"),
+    info ? h('div', {style:{lineHeight:"1.8"}},
+      h('div', null, "React 버전: " + info.reactVersion),
+      h('div', null, "페이지 내 #root 요소 개수: " + info.rootElCount + (info.rootElCount > 1 ? "  ← 2개 이상이면 이 HTML이 페이지에 중복 삽입된 것입니다" : "")),
+      h('div', null, "페이지 내 전체 <script> 태그 개수: " + info.scriptTagCount)
+    ) : h('div', null, "확인 중..."),
+    h('div', {style:{marginTop:"10px", display:"flex", alignItems:"center", gap:"10px"}},
+      h('button', {
+        onClick: function(){ setCount(function(c){ return c + 1; }); },
+        style:{padding:"6px 14px", cursor:"pointer", border:"1px solid #12233F", background:"#12233F", color:"#fff", fontFamily:"inherit"}
+      }, "여기를 눌러보세요"),
+      h('span', null, "클릭 횟수: " + count + (count > 0 ? " ← 이 숫자가 올라가면 반응형 자체는 정상 작동 중입니다" : ""))
+    )
   );
 }
 
 function App(){
-  // 1) 기본 계약 정보
   const [households, setHouseholds] = useState("300");
   const [appliedPower, setAppliedPower] = useState("2393");
   const [houseUsage, setHouseUsage] = useState("523053");
   const [commonUsage, setCommonUsage] = useState("98106");
 
-  // 2) 종합계약(개선전) - 세대+공용
   const [compBasic, setCompBasic] = useState("7884430");
   const [compEnergy, setCompEnergy] = useState("128128069");
   const [compClimate, setCompClimate] = useState("5590431");
   const [compFuel, setCompFuel] = useState("3105795");
 
-  // 3) 단일계약(개선후) - 세대+공용 통합
   const [singleBasic, setSingleBasic] = useState("5149730");
   const [singleEnergy, setSingleEnergy] = useState("109211555");
   const [singleClimate, setSingleClimate] = useState("5590431");
   const [singleFuel, setSingleFuel] = useState("3105795");
 
-  // 4) 자고객(일반용전력, 별도계약 - 개선 전/후 동일 적용)
   const [useSubCustomer, setUseSubCustomer] = useState(true);
   const [subUsage, setSubUsage] = useState("2453");
   const [subBasic, setSubBasic] = useState("30800");
@@ -260,14 +369,12 @@ function App(){
   const [subClimate, setSubClimate] = useState("22077");
   const [subFuel, setSubFuel] = useState("12265");
 
-  // 5) 세율
   const [vatRate, setVatRate] = useState("10");
   const [fundRate, setFundRate] = useState("3.7");
 
-  // 6) 검증용 실제 청구금액(선택)
   const [actualBill, setActualBill] = useState("138212180");
 
-  const calc = useMemo(()=>{
+  const calc = useMemo(function(){
     const hh = toNum(households);
     const power = toNum(appliedPower);
     const hUse = toNum(houseUsage);
@@ -284,8 +391,8 @@ function App(){
     const subSubtotal = sub.basic + sub.energy + sub.climate + sub.fuel;
     const subApplied = useSubCustomer ? subSubtotal : 0;
 
-    const vr = toNum(vatRate)/100;
-    const fr = toNum(fundRate)/100;
+    const vr = toNum(vatRate) / 100;
+    const fr = toNum(fundRate) / 100;
 
     const beforePre = compSubtotal + subApplied;
     const beforeVat = Math.round(beforePre * vr);
@@ -298,28 +405,29 @@ function App(){
     const afterFinal = afterPre + afterVat + afterFund;
 
     const diff = beforeFinal - afterFinal;
-    const diffPct = beforePre > 0 ? (diff/beforeFinal)*100 : 0;
-    const perHouseholdMonthly = hh > 0 ? diff/hh : 0;
-    const annual = diff*12;
-    const perHouseholdAnnual = hh > 0 ? annual/hh : 0;
+    const diffPct = beforeFinal > 0 ? (diff / beforeFinal) * 100 : 0;
+    const perHouseholdMonthly = hh > 0 ? diff / hh : 0;
+    const annual = diff * 12;
+    const perHouseholdAnnual = hh > 0 ? annual / hh : 0;
 
-    const compUnitEnergy = totalUsage>0 ? comp.energy/totalUsage : 0;
-    const singleUnitEnergy = totalUsage>0 ? single.energy/totalUsage : 0;
-    const compUnitBasic = power>0 ? comp.basic/power : 0;
-    const singleUnitBasic = power>0 ? single.basic/power : 0;
+    const compUnitEnergy = totalUsage > 0 ? comp.energy / totalUsage : 0;
+    const singleUnitEnergy = totalUsage > 0 ? single.energy / totalUsage : 0;
+    const compUnitBasic = power > 0 ? comp.basic / power : 0;
+    const singleUnitBasic = power > 0 ? single.basic / power : 0;
 
     const actual = toNum(actualBill);
     const actualDiff = actual - beforeFinal;
-    const actualDiffPct = actual>0 ? (actualDiff/actual)*100 : 0;
+    const actualDiffPct = actual > 0 ? (actualDiff / actual) * 100 : 0;
 
     return {
-      hh, power, hUse, cUse, totalUsage,
-      comp, compSubtotal, single, singleSubtotal, sub, subSubtotal, subApplied,
-      beforePre, beforeVat, beforeFund, beforeFinal,
-      afterPre, afterVat, afterFund, afterFinal,
-      diff, diffPct, perHouseholdMonthly, annual, perHouseholdAnnual,
-      compUnitEnergy, singleUnitEnergy, compUnitBasic, singleUnitBasic,
-      actual, actualDiff, actualDiffPct
+      hh: hh, power: power, hUse: hUse, cUse: cUse, totalUsage: totalUsage,
+      comp: comp, compSubtotal: compSubtotal, single: single, singleSubtotal: singleSubtotal,
+      sub: sub, subSubtotal: subSubtotal, subApplied: subApplied,
+      beforePre: beforePre, beforeVat: beforeVat, beforeFund: beforeFund, beforeFinal: beforeFinal,
+      afterPre: afterPre, afterVat: afterVat, afterFund: afterFund, afterFinal: afterFinal,
+      diff: diff, diffPct: diffPct, perHouseholdMonthly: perHouseholdMonthly, annual: annual, perHouseholdAnnual: perHouseholdAnnual,
+      compUnitEnergy: compUnitEnergy, singleUnitEnergy: singleUnitEnergy, compUnitBasic: compUnitBasic, singleUnitBasic: singleUnitBasic,
+      actual: actual, actualDiff: actualDiff, actualDiffPct: actualDiffPct
     };
   }, [households, appliedPower, houseUsage, commonUsage,
       compBasic, compEnergy, compClimate, compFuel,
@@ -329,265 +437,292 @@ function App(){
 
   const withinTolerance = Math.abs(calc.actualDiffPct) < 3;
 
-  return (
-    <React.Fragment>
-      <div className="masthead">
-        <div>
-          <div className="eyebrow">GBS · G-123 Electricity Tariff Model</div>
-          <h1>전기요금 분석기</h1>
-          <div className="sub">종합계약(세대별 개별계산) vs 단일계약(주택용고압 통합계산) — 자고객(일반용전력) 별도 반영, 부가세·기금 포함 최종 청구요금 비교 도구</div>
-        </div>
-        <div className="tag">고객번호 05 3066 1603 · 주택용고압</div>
-      </div>
+  return h(React.Fragment, null,
 
-      <div className="layout">
+    h(DiagnosticPanel, null),
 
-        {/* 1. 기본 계약정보 */}
-        <div className="panel">
-          <div className="panel-head">
-            <div className="idx">1</div>
-            <div>
-              <h2>기본 계약정보</h2>
-              <p>한전 사이버지점 청구서 기준 세대수 · 요금적용전력 · 사용량 입력</p>
-            </div>
-          </div>
-          <div className="panel-body">
-            <div className="grid grid-4">
-              <Field label="세대수" unit="세대" value={households} onChange={setHouseholds} />
-              <Field label="요금적용전력" unit="kW" value={appliedPower} onChange={setAppliedPower} />
-              <Field label="세대사용량" unit="kWh" value={houseUsage} onChange={setHouseUsage} />
-              <Field label="공용사용량" unit="kWh" value={commonUsage} onChange={setCommonUsage} />
-            </div>
-            <div className="subtotal-line">
-              <span className="label">세대+공용 총사용량</span>
-              <span className="value">{fmt(calc.totalUsage)} kWh</span>
-            </div>
-          </div>
-        </div>
+    h('div', {className:"masthead"},
+      h('div', null,
+        h('div', {className:"eyebrow"}, "GBS · G-123 Electricity Tariff Model"),
+        h('h1', null, "전기요금 분석기"),
+        h('div', {className:"sub"}, "종합계약(세대별 개별계산) vs 단일계약(주택용고압 통합계산) — 자고객(일반용전력) 별도 반영, 부가세·기금 포함 최종 청구요금 비교 도구")
+      ),
+      h('div', {className:"tag"}, "고객번호 05 3066 1603 · 주택용고압")
+    ),
 
-        {/* 2 & 3 side by side */}
-        <div className="grid grid-2">
-          <div className="panel">
-            <div className="panel-head">
-              <div className="idx" style={{background:"var(--teal)"}}>2</div>
-              <div>
-                <h2>종합계약 (개선전)</h2>
-                <p>세대별 개별계산 합산 · 세대+공용</p>
-              </div>
-            </div>
-            <div className="panel-body">
-              <div className="grid grid-2">
-                <Field accent="teal" label="기본요금" unit="원" value={compBasic} onChange={setCompBasic} />
-                <Field accent="teal" label="전력량요금" unit="원" value={compEnergy} onChange={setCompEnergy} />
-                <Field accent="teal" label="기후환경요금" unit="원" value={compClimate} onChange={setCompClimate} />
-                <Field accent="teal" label="연료비조정액" unit="원" value={compFuel} onChange={setCompFuel} />
-              </div>
-              <div className="subtotal-line teal">
-                <span className="label">종합계약 소계 (세전)</span>
-                <span className="value">{fmt(calc.compSubtotal)} 원</span>
-              </div>
-              <div className="note">kWh당 전력량단가 ≈ {fmt1(calc.compUnitEnergy)}원 · kW당 기본단가 ≈ {fmt1(calc.compUnitBasic)}원</div>
-            </div>
-          </div>
+    h('div', {className:"layout"},
 
-          <div className="panel">
-            <div className="panel-head">
-              <div className="idx" style={{background:"var(--copper)"}}>3</div>
-              <div>
-                <h2>단일계약 (개선후)</h2>
-                <p>공용전기 별도 없이 세대+공용 하나로 통합계산</p>
-              </div>
-            </div>
-            <div className="panel-body">
-              <div className="grid grid-2">
-                <Field accent="copper" label="기본요금" unit="원" value={singleBasic} onChange={setSingleBasic} />
-                <Field accent="copper" label="전력량요금" unit="원" value={singleEnergy} onChange={setSingleEnergy} />
-                <Field accent="copper" label="기후환경요금" unit="원" value={singleClimate} onChange={setSingleClimate} />
-                <Field accent="copper" label="연료비조정액" unit="원" value={singleFuel} onChange={setSingleFuel} />
-              </div>
-              <div className="subtotal-line copper">
-                <span className="label">단일계약 소계 (세전)</span>
-                <span className="value">{fmt(calc.singleSubtotal)} 원</span>
-              </div>
-              <div className="note">kWh당 전력량단가 ≈ {fmt1(calc.singleUnitEnergy)}원 · kW당 기본단가 ≈ {fmt1(calc.singleUnitBasic)}원</div>
-            </div>
-          </div>
-        </div>
+      h('div', {className:"panel"},
+        h('div', {className:"panel-head"},
+          h('div', {className:"idx"}, "1"),
+          h('div', null,
+            h('h2', null, "기본 계약정보"),
+            h('p', null, "한전 사이버지점 청구서 기준 세대수 · 요금적용전력 · 사용량 입력")
+          )
+        ),
+        h('div', {className:"panel-body"},
+          h('div', {className:"grid grid-4"},
+            h(Field, { label:"세대수", unit:"세대", value: households, onChange: setHouseholds,
+              hint: "세대당 월 절감액 " + fmt(calc.perHouseholdMonthly) + "원" }),
+            h(Field, { label:"요금적용전력", unit:"kW", value: appliedPower, onChange: setAppliedPower }),
+            h(Field, { label:"세대사용량", unit:"kWh", value: houseUsage, onChange: setHouseUsage }),
+            h(Field, { label:"공용사용량", unit:"kWh", value: commonUsage, onChange: setCommonUsage })
+          ),
+          h('div', {className:"subtotal-line"},
+            h('span', {className:"label"}, "세대+공용 총사용량"),
+            h(FlashValue, {value: calc.totalUsage, className:"value"}, fmt(calc.totalUsage) + " kWh")
+          )
+        )
+      ),
 
-        {/* 4. 자고객 */}
-        <div className="panel">
-          <div className="panel-head">
-            <div className="idx">4</div>
-            <div>
-              <h2>자고객 (일반용전력, 별도계약)</h2>
-              <p>상가 등 자체고객 사용분 — 계약방식과 무관하게 개선전·개선후 동일하게 가산</p>
-            </div>
-          </div>
-          <div className="panel-body">
-            <div className="toggle-row">
-              <input type="checkbox" id="subToggle" checked={useSubCustomer} onChange={e=>setUseSubCustomer(e.target.checked)} />
-              <label htmlFor="subToggle">자고객 요금을 개선전·개선후 청구액에 별도 가산합니다</label>
-            </div>
-            <div className="grid grid-4">
-              <Field label="자고객 사용량" unit="kWh" value={subUsage} onChange={setSubUsage} />
-              <Field label="기본요금" unit="원" value={subBasic} onChange={setSubBasic} />
-              <Field label="사용량요금" unit="원" value={subEnergy} onChange={setSubEnergy} />
-              <Field label="기후환경요금" unit="원" value={subClimate} onChange={setSubClimate} />
-            </div>
-            <div className="grid grid-4" style={{marginTop:"14px"}}>
-              <Field label="연료비조정액" unit="원" value={subFuel} onChange={setSubFuel} />
-            </div>
-            <div className="subtotal-line">
-              <span className="label">자고객 소계 (세전)</span>
-              <span className="value">{fmt(calc.subSubtotal)} 원</span>
-            </div>
-            <div className="note">개선전 = 종합계약 소계 + 자고객 소계 &nbsp;|&nbsp; 개선후 = 단일계약 소계 + 자고객 소계 (자고객분은 두 시나리오 모두 동일 금액 적용)</div>
-          </div>
-        </div>
+      h('div', {className:"grid grid-2"},
+        h('div', {className:"panel"},
+          h('div', {className:"panel-head"},
+            h('div', {className:"idx", style:{background:"var(--teal)"}}, "2"),
+            h('div', null,
+              h('h2', null, "종합계약 (개선전)"),
+              h('p', null, "세대별 개별계산 합산 · 세대+공용")
+            )
+          ),
+          h('div', {className:"panel-body"},
+            h('div', {className:"grid grid-2"},
+              h(Field, { accent:"teal", label:"기본요금", unit:"원", value: compBasic, onChange: setCompBasic }),
+              h(Field, { accent:"teal", label:"전력량요금", unit:"원", value: compEnergy, onChange: setCompEnergy }),
+              h(Field, { accent:"teal", label:"기후환경요금", unit:"원", value: compClimate, onChange: setCompClimate }),
+              h(Field, { accent:"teal", label:"연료비조정액", unit:"원", value: compFuel, onChange: setCompFuel })
+            ),
+            h('div', {className:"subtotal-line teal"},
+              h('span', {className:"label"}, "종합계약 소계 (세전)"),
+              h(FlashValue, {value: calc.compSubtotal, className:"value"}, fmt(calc.compSubtotal) + " 원")
+            ),
+            h('div', {className:"note"}, "kWh당 전력량단가 ≈ " + fmt1(calc.compUnitEnergy) + "원 · kW당 기본단가 ≈ " + fmt1(calc.compUnitBasic) + "원")
+          )
+        ),
 
-        {/* 5. 세율 */}
-        <div className="panel">
-          <div className="panel-head">
-            <div className="idx">5</div>
-            <div>
-              <h2>부가세 · 기금 적용률</h2>
-              <p>부가가치세는 원단위 반올림, 전력산업기반기금은 10원미만 절사</p>
-            </div>
-          </div>
-          <div className="panel-body">
-            <div className="grid grid-2">
-              <Field label="부가가치세율" unit="%" value={vatRate} onChange={setVatRate} />
-              <Field label="전력산업기반기금율" unit="%" value={fundRate} onChange={setFundRate} />
-            </div>
-          </div>
-        </div>
+        h('div', {className:"panel"},
+          h('div', {className:"panel-head"},
+            h('div', {className:"idx", style:{background:"var(--copper)"}}, "3"),
+            h('div', null,
+              h('h2', null, "단일계약 (개선후)"),
+              h('p', null, "공용전기 별도 없이 세대+공용 하나로 통합계산")
+            )
+          ),
+          h('div', {className:"panel-body"},
+            h('div', {className:"grid grid-2"},
+              h(Field, { accent:"copper", label:"기본요금", unit:"원", value: singleBasic, onChange: setSingleBasic }),
+              h(Field, { accent:"copper", label:"전력량요금", unit:"원", value: singleEnergy, onChange: setSingleEnergy }),
+              h(Field, { accent:"copper", label:"기후환경요금", unit:"원", value: singleClimate, onChange: setSingleClimate }),
+              h(Field, { accent:"copper", label:"연료비조정액", unit:"원", value: singleFuel, onChange: setSingleFuel })
+            ),
+            h('div', {className:"subtotal-line copper"},
+              h('span', {className:"label"}, "단일계약 소계 (세전)"),
+              h(FlashValue, {value: calc.singleSubtotal, className:"value"}, fmt(calc.singleSubtotal) + " 원")
+            ),
+            h('div', {className:"note"}, "kWh당 전력량단가 ≈ " + fmt1(calc.singleUnitEnergy) + "원 · kW당 기본단가 ≈ " + fmt1(calc.singleUnitBasic) + "원")
+          )
+        )
+      ),
 
-        {/* 6. 결과 - 대조 명세서 */}
-        <div className="panel" style={{border:"1px solid var(--ink)"}}>
-          <div className="panel-head" style={{background:"var(--ink)"}}>
-            <div className="idx" style={{background:"var(--paper)", color:"var(--ink)"}}>6</div>
-            <div>
-              <h2 style={{color:"var(--paper)"}}>청구요금 대조 명세서</h2>
-              <p style={{color:"#B8C4D6"}}>부가세 · 기금 포함 최종 청구요금 비교</p>
-            </div>
-          </div>
-          <div className="panel-body" style={{padding:0}}>
-            <div className="ledger">
-              <div className="ledger-col before">
-                <span className="ledger-tag before">개선전 · 종합계약</span>
-                <h3>Before</h3>
-                <div className="ledger-row"><span className="k">종합계약 소계</span><span className="v">{fmt(calc.compSubtotal)}</span></div>
-                <div className="ledger-row"><span className="k">자고객 소계</span><span className="v">{fmt(calc.subApplied)}</span></div>
-                <div className="ledger-row"><span className="k">전기요금계 (세전)</span><span className="v">{fmt(calc.beforePre)}</span></div>
-                <div className="ledger-row"><span className="k">부가가치세</span><span className="v">{fmt(calc.beforeVat)}</span></div>
-                <div className="ledger-row"><span className="k">전력산업기반기금</span><span className="v">{fmt(calc.beforeFund)}</span></div>
-                <div className="ledger-final"><span className="k">최종 청구금액</span><span className="v">{fmt(calc.beforeFinal)}원</span></div>
-              </div>
-              <div className="ledger-mid"></div>
-              <div className="ledger-col after">
-                <span className="ledger-tag after">개선후 · 단일계약</span>
-                <h3>After</h3>
-                <div className="ledger-row"><span className="k">단일계약 소계</span><span className="v">{fmt(calc.singleSubtotal)}</span></div>
-                <div className="ledger-row"><span className="k">자고객 소계</span><span className="v">{fmt(calc.subApplied)}</span></div>
-                <div className="ledger-row"><span className="k">전기요금계 (세전)</span><span className="v">{fmt(calc.afterPre)}</span></div>
-                <div className="ledger-row"><span className="k">부가가치세</span><span className="v">{fmt(calc.afterVat)}</span></div>
-                <div className="ledger-row"><span className="k">전력산업기반기금</span><span className="v">{fmt(calc.afterFund)}</span></div>
-                <div className="ledger-final"><span className="k">최종 청구금액</span><span className="v">{fmt(calc.afterFinal)}원</span></div>
-              </div>
-            </div>
+      h('div', {className:"panel"},
+        h('div', {className:"panel-head"},
+          h('div', {className:"idx"}, "4"),
+          h('div', null,
+            h('h2', null, "자고객 (일반용전력, 별도계약)"),
+            h('p', null, "상가 등 자체고객 사용분 — 계약방식과 무관하게 개선전·개선후 동일하게 가산")
+          )
+        ),
+        h('div', {className:"panel-body"},
+          h('div', {className:"toggle-row"},
+            h('input', {type:"checkbox", id:"subToggle", checked: useSubCustomer,
+              onChange: function(e){ setUseSubCustomer(e.target.checked); } }),
+            h('label', {htmlFor:"subToggle"}, "자고객 요금을 개선전·개선후 청구액에 별도 가산합니다")
+          ),
+          h('div', {className:"grid grid-4"},
+            h(Field, { label:"자고객 사용량", unit:"kWh", value: subUsage, onChange: setSubUsage }),
+            h(Field, { label:"기본요금", unit:"원", value: subBasic, onChange: setSubBasic }),
+            h(Field, { label:"사용량요금", unit:"원", value: subEnergy, onChange: setSubEnergy }),
+            h(Field, { label:"기후환경요금", unit:"원", value: subClimate, onChange: setSubClimate })
+          ),
+          h('div', {className:"grid grid-4", style:{marginTop:"14px"}},
+            h(Field, { label:"연료비조정액", unit:"원", value: subFuel, onChange: setSubFuel })
+          ),
+          h('div', {className:"subtotal-line"},
+            h('span', {className:"label"}, "자고객 소계 (세전)"),
+            h(FlashValue, {value: calc.subSubtotal, className:"value"}, fmt(calc.subSubtotal) + " 원")
+          ),
+          h('div', {className:"note"}, "개선전 = 종합계약 소계 + 자고객 소계  |  개선후 = 단일계약 소계 + 자고객 소계 (자고객분은 두 시나리오 모두 동일 금액 적용)")
+        )
+      ),
 
-            <div className="stub">
-              <div className="eyebrow">절감 효과 요약</div>
-              <div className="stub-grid">
-                <div className={"stub-item" + (calc.diff<0 ? " negative":"")}>
-                  <div className="big">{fmt(calc.diff)}원</div>
-                  <div className="lbl">월 절감액 (개선전 − 개선후) · {fmt1(calc.diffPct)}%</div>
-                </div>
-                <div className={"stub-item" + (calc.perHouseholdMonthly<0 ? " negative":"")}>
-                  <div className="big">{fmt(calc.perHouseholdMonthly)}원</div>
-                  <div className="lbl">세대당 월 절감액 ({fmt(calc.hh)}세대 기준)</div>
-                </div>
-                <div className={"stub-item" + (calc.annual<0 ? " negative":"")}>
-                  <div className="big">{fmt(calc.annual)}원</div>
-                  <div className="lbl">연간 절감액 (세대당 연 {fmt(calc.perHouseholdAnnual)}원)</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      h('div', {className:"panel"},
+        h('div', {className:"panel-head"},
+          h('div', {className:"idx"}, "5"),
+          h('div', null,
+            h('h2', null, "부가세 · 기금 적용률"),
+            h('p', null, "부가가치세는 원단위 반올림, 전력산업기반기금은 10원미만 절사")
+          )
+        ),
+        h('div', {className:"panel-body"},
+          h('div', {className:"grid grid-2"},
+            h(Field, { label:"부가가치세율", unit:"%", value: vatRate, onChange: setVatRate,
+              hint: "적용 시 개선전 최종청구 " + fmt(calc.beforeFinal) + "원" }),
+            h(Field, { label:"전력산업기반기금율", unit:"%", value: fundRate, onChange: setFundRate,
+              hint: "적용 시 개선후 최종청구 " + fmt(calc.afterFinal) + "원" })
+          )
+        )
+      ),
 
-        {/* 7. 상세 비교표 */}
-        <div className="panel">
-          <div className="panel-head">
-            <div className="idx">7</div>
-            <div>
-              <h2>항목별 상세 비교표</h2>
-              <p>기본요금 · 전력량요금 · 기후환경요금 · 연료비조정액 세부 대조</p>
-            </div>
-          </div>
-          <div className="panel-body">
-            <div className="table-wrap">
-              <table className="mini">
-                <thead>
-                  <tr>
-                    <th>구분</th>
-                    <th>종합계약(개선전)</th>
-                    <th>단일계약(개선후)</th>
-                    <th>차액</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr><td>기본요금</td><td>{fmt(calc.comp.basic)}</td><td>{fmt(calc.single.basic)}</td><td>{fmt(calc.comp.basic-calc.single.basic)}</td></tr>
-                  <tr><td>전력량요금</td><td>{fmt(calc.comp.energy)}</td><td>{fmt(calc.single.energy)}</td><td>{fmt(calc.comp.energy-calc.single.energy)}</td></tr>
-                  <tr><td>기후환경요금</td><td>{fmt(calc.comp.climate)}</td><td>{fmt(calc.single.climate)}</td><td>{fmt(calc.comp.climate-calc.single.climate)}</td></tr>
-                  <tr><td>연료비조정액</td><td>{fmt(calc.comp.fuel)}</td><td>{fmt(calc.single.fuel)}</td><td>{fmt(calc.comp.fuel-calc.single.fuel)}</td></tr>
-                  <tr><td>자고객 (동일가산)</td><td>{fmt(calc.subApplied)}</td><td>{fmt(calc.subApplied)}</td><td>0</td></tr>
-                  <tr style={{fontWeight:600}}><td>전기요금계 (세전)</td><td>{fmt(calc.beforePre)}</td><td>{fmt(calc.afterPre)}</td><td>{fmt(calc.beforePre-calc.afterPre)}</td></tr>
-                  <tr><td>부가가치세</td><td>{fmt(calc.beforeVat)}</td><td>{fmt(calc.afterVat)}</td><td>{fmt(calc.beforeVat-calc.afterVat)}</td></tr>
-                  <tr><td>전력산업기반기금</td><td>{fmt(calc.beforeFund)}</td><td>{fmt(calc.afterFund)}</td><td>{fmt(calc.beforeFund-calc.afterFund)}</td></tr>
-                  <tr style={{fontWeight:700}}><td>최종 청구금액</td><td>{fmt(calc.beforeFinal)}</td><td>{fmt(calc.afterFinal)}</td><td>{fmt(calc.diff)}</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+      (function(){
+        var moreExpensive = calc.diff >= 0; // true: 종합계약이 더 비쌈 (단일 전환시 절감)
+        var absDiff = Math.abs(calc.diff);
+        var absPerHh = calc.hh > 0 ? absDiff / calc.hh : null;
+        var absAnnual = absDiff * 12;
+        var bannerClass = moreExpensive ? "warn" : "good";
+        var bannerTitle = moreExpensive
+          ? "⚠ 종합계약이 단일계약보다 더 비쌉니다!"
+          : "✓ 단일계약이 종합계약보다 더 비쌉니다!";
+        var tri = moreExpensive ? "▲" : "▼";
 
-        {/* 8. 검증 */}
-        <div className="panel">
-          <div className="panel-head">
-            <div className="idx">8</div>
-            <div>
-              <h2>실제 고지서 검증</h2>
-              <p>한전 실제 청구서의 청구금액과 개선전(종합계약) 계산값을 대조합니다</p>
-            </div>
-          </div>
-          <div className="panel-body">
-            <div className="grid grid-2" style={{marginBottom:"14px"}}>
-              <Field label="실제 고지서 청구금액" unit="원" value={actualBill} onChange={setActualBill} />
-            </div>
-            <div className="validate">
-              <div className="stat">실제 청구금액 <b>{fmt(calc.actual)}원</b> vs 계산값(개선전) <b>{fmt(calc.beforeFinal)}원</b></div>
-              <div className="stat">차이 {fmt(calc.actualDiff)}원 ({fmt1(calc.actualDiffPct)}%)</div>
-              <span className={"badge " + (withinTolerance ? "ok" : "warn")}>
-                {withinTolerance ? "허용범위 이내 (±3%)" : "차이 큼 — 할인항목 확인 필요"}
-              </span>
-            </div>
-            <div className="note">
-              실제 고지서에는 다자녀할인·대가족요금·의료기기·에너지캐시백 등 개별 할인 항목이 추가로 반영되어 본 모델의 세전 계산값과 차이가 발생할 수 있습니다. 절감효과 비교(종합 vs 단일)는 두 시나리오에 동일한 세율·조건을 적용하므로 할인 항목과 무관하게 유효합니다.
-            </div>
-          </div>
-        </div>
+        return h('div', {className:"panel", style:{border:"none", background:"transparent"}},
+          h('div', {className:"panel-body", style:{padding:0}},
+            h('div', {className:"hero-result"},
+              h('div', {className:"hero-title"}, "GBS G-123 핵심 분석 결과"),
+              h('div', {className:"hero-sub"}, "동일 단지 · 동일 사용량 | 정확한 계약종별 비교"),
 
-      </div>
+              h('div', {className:"hero-grid"},
+                h('div', {className:"hero-card teal"},
+                  h('div', {className:"hc-title"}, "종합계약 (세대별)"),
+                  h('div', {className:"hc-sub"}, "세대: 주택용전력 · 세대별 개별계산", h('br'), "공용: 일반용전력 · 자고객 별도가산"),
+                  h('div', {className:"hc-block"},
+                    h('div', {className:"hc-label"}, "세대+공용 소계 (세전)"),
+                    h(FlashValue, {value: calc.compSubtotal, className:"hc-value"}, fmt(calc.compSubtotal) + "원"),
+                    h('div', {className:"hc-note"}, "kWh당 " + fmt1(calc.compUnitEnergy) + "원 · kW당 " + fmt1(calc.compUnitBasic) + "원")
+                  ),
+                  h('div', {className:"hc-divider"}),
+                  h('div', {className:"hc-final-label"}, "단지 전체 최종 청구금액 (부가세·기금 포함)"),
+                  h(FlashValue, {value: calc.beforeFinal, className:"hc-final-value"}, fmt(calc.beforeFinal) + "원"),
+                  h('div', {className:"hc-per"},
+                    calc.hh > 0 ? "세대당 " + fmt(calc.beforeFinal / calc.hh) + "원" : "세대수를 입력해주세요")
+                ),
 
-      <footer>
-        GBS G-123 전기요금 분석기 · 모든 입력값은 브라우저 내에서만 계산되며 저장되지 않습니다. 세대수·요금적용전력·사용량·요금 4항목·자고객 항목을 한전 사이버지점 자료에 맞게 수정하여 사용하세요.
-      </footer>
-    </React.Fragment>
+                h('div', {className:"hero-center"},
+                  h('div', {className:"hc-tri"}, tri),
+                  h(FlashValue, {value: calc.diff, className:"hc-diff"}, fmt(absDiff) + "원"),
+                  h('div', {className:"hc-diff-unit"}, "원/월 차액"),
+                  h('div', {className:"hc-sep"}),
+                  h('div', {className:"hc-sub-label"}, "세대당 차액"),
+                  h('div', {className:"hc-sub-value"}, calc.hh > 0 ? fmt(absPerHh) + "원" : "-"),
+                  h('div', {className:"hc-sub-label"}, "연간 차액"),
+                  h('div', {className:"hc-sub-value"}, fmt(absAnnual) + "원")
+                ),
+
+                h('div', {className:"hero-card copper"},
+                  h('div', {className:"hc-title"}, "단일계약 (통합)"),
+                  h('div', {className:"hc-sub"}, "세대+공용: 주택용고압 하나로 통합계산", h('br'), "자고객: 일반용전력 별도가산"),
+                  h('div', {className:"hc-block"},
+                    h('div', {className:"hc-label"}, "세대+공용 소계 (세전)"),
+                    h(FlashValue, {value: calc.singleSubtotal, className:"hc-value"}, fmt(calc.singleSubtotal) + "원"),
+                    h('div', {className:"hc-note"}, "kWh당 " + fmt1(calc.singleUnitEnergy) + "원 · kW당 " + fmt1(calc.singleUnitBasic) + "원")
+                  ),
+                  h('div', {className:"hc-divider"}),
+                  h('div', {className:"hc-final-label"}, "단지 전체 최종 청구금액 (부가세·기금 포함)"),
+                  h(FlashValue, {value: calc.afterFinal, className:"hc-final-value"}, fmt(calc.afterFinal) + "원"),
+                  h('div', {className:"hc-per"},
+                    calc.hh > 0 ? "세대당 " + fmt(calc.afterFinal / calc.hh) + "원" : "세대수를 입력해주세요")
+                )
+              ),
+
+              h('div', {className:"hero-banner " + bannerClass},
+                h('div', {className:"hb-title"}, bannerTitle),
+                h('div', {className:"hb-detail"},
+                  (calc.hh > 0 ? "세대당 월 " + fmt(absPerHh) + "원 차액 | " : "") +
+                  "단지 전체 월 " + fmt(absDiff) + "원 | 연간 " + fmt(absAnnual) + "원")
+              )
+            )
+          )
+        );
+      })(),
+
+      h('div', {className:"panel"},
+        h('div', {className:"panel-head"},
+          h('div', {className:"idx"}, "7"),
+          h('div', null,
+            h('h2', null, "항목별 상세 비교표"),
+            h('p', null, "기본요금 · 전력량요금 · 기후환경요금 · 연료비조정액 세부 대조")
+          )
+        ),
+        h('div', {className:"panel-body"},
+          h('div', {className:"table-wrap"},
+            h('table', {className:"mini"},
+              h('thead', null,
+                h('tr', null,
+                  h('th', null, "구분"), h('th', null, "종합계약(개선전)"), h('th', null, "단일계약(개선후)"), h('th', null, "차액")
+                )
+              ),
+              h('tbody', null,
+                h('tr', null, h('td', null, "기본요금"), h('td', null, fmt(calc.comp.basic)), h('td', null, fmt(calc.single.basic)), h('td', null, fmt(calc.comp.basic - calc.single.basic))),
+                h('tr', null, h('td', null, "전력량요금"), h('td', null, fmt(calc.comp.energy)), h('td', null, fmt(calc.single.energy)), h('td', null, fmt(calc.comp.energy - calc.single.energy))),
+                h('tr', null, h('td', null, "기후환경요금"), h('td', null, fmt(calc.comp.climate)), h('td', null, fmt(calc.single.climate)), h('td', null, fmt(calc.comp.climate - calc.single.climate))),
+                h('tr', null, h('td', null, "연료비조정액"), h('td', null, fmt(calc.comp.fuel)), h('td', null, fmt(calc.single.fuel)), h('td', null, fmt(calc.comp.fuel - calc.single.fuel))),
+                h('tr', null, h('td', null, "자고객 (동일가산)"), h('td', null, fmt(calc.subApplied)), h('td', null, fmt(calc.subApplied)), h('td', null, "0")),
+                h('tr', {style:{fontWeight:600}}, h('td', null, "전기요금계 (세전)"), h('td', null, fmt(calc.beforePre)), h('td', null, fmt(calc.afterPre)), h('td', null, fmt(calc.beforePre - calc.afterPre))),
+                h('tr', null, h('td', null, "부가가치세"), h('td', null, fmt(calc.beforeVat)), h('td', null, fmt(calc.afterVat)), h('td', null, fmt(calc.beforeVat - calc.afterVat))),
+                h('tr', null, h('td', null, "전력산업기반기금"), h('td', null, fmt(calc.beforeFund)), h('td', null, fmt(calc.afterFund)), h('td', null, fmt(calc.beforeFund - calc.afterFund))),
+                h('tr', {style:{fontWeight:700}}, h('td', null, "최종 청구금액"), h('td', null, fmt(calc.beforeFinal)), h('td', null, fmt(calc.afterFinal)), h('td', null, fmt(calc.diff)))
+              )
+            )
+          )
+        )
+      ),
+
+      h('div', {className:"panel"},
+        h('div', {className:"panel-head"},
+          h('div', {className:"idx"}, "8"),
+          h('div', null,
+            h('h2', null, "실제 고지서 검증"),
+            h('p', null, "한전 실제 청구서의 청구금액과 개선전(종합계약) 계산값을 대조합니다")
+          )
+        ),
+        h('div', {className:"panel-body"},
+          h('div', {className:"grid grid-2", style:{marginBottom:"14px"}},
+            h(Field, { label:"실제 고지서 청구금액", unit:"원", value: actualBill, onChange: setActualBill })
+          ),
+          h('div', {className:"validate"},
+            h('div', {className:"stat"}, "실제 청구금액 ", h('b', null, fmt(calc.actual) + "원"), " vs 계산값(개선전) ", h('b', null, fmt(calc.beforeFinal) + "원")),
+            h('div', {className:"stat"}, "차이 " + fmt(calc.actualDiff) + "원 (" + fmt1(calc.actualDiffPct) + "%)"),
+            h('span', {className:"badge " + (withinTolerance ? "ok" : "warn")},
+              withinTolerance ? "허용범위 이내 (±3%)" : "차이 큼 — 할인항목 확인 필요")
+          ),
+          h('div', {className:"note"}, "실제 고지서에는 다자녀할인·대가족요금·의료기기·에너지캐시백 등 개별 할인 항목이 추가로 반영되어 본 모델의 세전 계산값과 차이가 발생할 수 있습니다. 절감효과 비교(종합 vs 단일)는 두 시나리오에 동일한 세율·조건을 적용하므로 할인 항목과 무관하게 유효합니다.")
+        )
+      )
+
+    ),
+
+    h('footer', null,
+      "GBS G-123 전기요금 분석기 · 모든 입력값은 브라우저 내에서만 계산되며 저장되지 않습니다. 세대수·요금적용전력·사용량·요금 4항목·자고객 항목을 한전 사이버지점 자료에 맞게 수정하여 사용하세요.",
+      h('div', {className:"live-tick"}, "buildmark: g123-v3-hero-result")
+    )
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+try {
+  var rootEl = document.getElementById('root');
+  if (window.__gbsAppAlreadyMounted) {
+    rootEl.insertAdjacentHTML('afterbegin',
+      '<div style="padding:16px;font-family:monospace;color:#B23A3A;border:2px solid #B23A3A;background:#F7E7E7;margin-bottom:16px;">' +
+      '⚠ 이 앱 스크립트가 페이지에 두 번 이상 실행되었습니다. 페이지 소스(Ctrl+U)에서 data-gbs-app 검색 시 1개만 있어야 정상입니다. ' +
+      'HTML을 페이지에 중복으로 붙여넣지 않았는지 확인해주세요.</div>');
+  } else {
+    window.__gbsAppAlreadyMounted = true;
+    ReactDOM.createRoot(rootEl).render(h(App));
+  }
+} catch (err) {
+  document.getElementById('root').innerHTML =
+    '<div style="padding:24px;font-family:monospace;color:#B23A3A;border:1px solid #B23A3A;">스크립트 오류: ' +
+    (err && err.message ? err.message : String(err)) +
+    '<br>페이지를 새로고침(Ctrl+Shift+R) 하거나 관리자에게 문의하세요.</div>';
+}
 </script>
 </body>
 </html>
