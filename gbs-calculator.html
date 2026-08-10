@@ -3,338 +3,460 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>G-123 요금DB 계산기 (2000~2026)</title>
+<title>GBS G-123 전기요금 분석기</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
   :root{
-    --ink:#12233F; --ink-soft:#5B6472; --paper:#FAF7F1; --paper-2:#F1ECE1;
-    --panel:#FFFFFF; --rule:#D9D2C2; --teal:#2F6F6D; --teal-soft:#E4EFEE;
-    --copper:#B8631F; --copper-soft:#F5E9DC; --green:#1F7A4C; --green-soft:#E4F2E9;
-    --red:#B23A3A; --red-soft:#F7E7E7;
+    --ink:#132039;
+    --ink-2:#28395c;
+    --paper:#F4F1E8;
+    --card:#FFFFFF;
+    --line:#DAD5C4;
+    --muted:#6B6656;
+    --gold:#B8860B;
+    --gold-bright:#D8A31C;
+    --good:#2F6E4F;
+    --good-bg:#E7F1EA;
+    --bad:#A32F26;
+    --bad-bg:#F6E7E4;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:var(--paper);
-    background-image:linear-gradient(var(--rule) 1px, transparent 1px);
-    background-size:100% 40px;
-    color:var(--ink); font-family:'Noto Sans KR',sans-serif; -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(ellipse at top left, rgba(184,134,11,0.06), transparent 45%),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Noto Sans KR', sans-serif;
+    -webkit-font-smoothing:antialiased;
   }
-  #root{max-width:1180px;margin:0 auto;padding:28px 20px 80px;}
-  .masthead{display:flex; justify-content:space-between; align-items:flex-end;
-    border-bottom:3px solid var(--ink); padding-bottom:18px; margin-bottom:6px;}
-  .masthead .eyebrow{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.12em;
-    color:var(--ink-soft); text-transform:uppercase; margin-bottom:6px;}
-  .masthead h1{font-family:'Noto Serif KR',serif; font-weight:700; font-size:28px; margin:0; letter-spacing:-.01em;}
-  .masthead .sub{font-size:13px; color:var(--ink-soft); margin-top:6px; max-width:560px; line-height:1.55;}
-  .masthead .tag{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink);
-    background:var(--paper-2); border:1px solid var(--rule); padding:6px 12px; white-space:nowrap;}
-  .layout{display:grid; grid-template-columns:1fr; gap:18px; margin-top:24px;}
-  .panel{background:var(--panel); border:1px solid var(--rule); position:relative;}
-  .panel-head{display:flex; align-items:center; gap:10px; padding:14px 18px; border-bottom:1px solid var(--rule); background:var(--paper-2);}
-  .panel-head .idx{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--paper);
-    background:var(--ink); width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
-  .panel-head h2{font-family:'Noto Serif KR',serif; font-size:16px; margin:0; font-weight:600;}
-  .panel-head p{margin:2px 0 0; font-size:12px; color:var(--ink-soft);}
-  .panel-body{padding:18px;}
-  .grid{display:grid; gap:14px;}
-  .grid-2{grid-template-columns:repeat(2,1fr);}
-  .grid-3{grid-template-columns:repeat(3,1fr);}
-  .grid-4{grid-template-columns:repeat(4,1fr);}
-  @media(max-width:760px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr;}}
-  .field label{display:block; font-size:12px; color:var(--ink-soft); margin-bottom:6px; font-weight:500;}
-  .field label .unit{color:#9AA2AC; font-weight:400;}
-  .field input, .field select{width:100%; border:1px solid var(--rule); background:var(--paper);
-    padding:10px 12px; font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--ink); border-radius:2px;}
-  .field input{text-align:right;}
-  .field input:focus, .field select:focus{outline:none; border-color:var(--ink); background:#fff;}
-  .note{font-size:11.5px; color:var(--ink-soft); line-height:1.6; margin-top:10px;}
-  .warn-box{background:var(--red-soft); border:1px solid #E8B4B4; color:#8A2C2C; font-size:12px;
-    padding:10px 14px; margin-top:14px; border-radius:2px; line-height:1.6;}
-  .ok-box{background:var(--green-soft); border:1px solid #A9D9BC; color:#1F5C3C; font-size:12px;
-    padding:10px 14px; margin-top:14px; border-radius:2px; line-height:1.6;}
-  table.mini{width:100%; border-collapse:collapse; font-size:12.5px;}
-  table.mini th, table.mini td{padding:8px 10px; text-align:right; border-bottom:1px solid var(--rule); font-family:'JetBrains Mono',monospace;}
-  table.mini th:first-child, table.mini td:first-child{text-align:left; font-family:'Noto Sans KR',sans-serif;}
-  table.mini th{color:var(--ink-soft); font-weight:500; font-family:'Noto Sans KR',sans-serif;}
-  .subtotal-line{display:flex; justify-content:space-between; align-items:baseline; margin-top:14px;
-    padding-top:12px; border-top:1px dashed var(--rule); font-family:'JetBrains Mono',monospace;}
-  .subtotal-line .label{font-size:12.5px; color:var(--ink-soft); font-family:'Noto Sans KR',sans-serif;}
-  .subtotal-line .value{font-size:18px; font-weight:600;}
-  .final-box{background:var(--ink); color:var(--paper); padding:22px; text-align:center; margin-top:4px;}
-  .final-box .lbl{font-size:12px; color:#B8C4D6; font-family:'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase;}
-  .final-box .val{font-family:'JetBrains Mono',monospace; font-size:34px; font-weight:800; color:#F5E7C8; margin-top:8px;}
-  footer{margin-top:36px; padding-top:16px; border-top:1px solid var(--rule); font-size:11.5px; color:var(--ink-soft); line-height:1.7;}
+  .mono{ font-family:'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  .serif{ font-family:'Noto Serif KR', serif; }
+
+  #root{ max-width:1180px; margin:0 auto; padding:36px 20px 80px; }
+
+  /* ---------- Header ---------- */
+  .masthead{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    border-bottom:3px double var(--ink);
+    padding-bottom:16px; margin-bottom:6px;
+  }
+  .masthead .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; letter-spacing:0.18em; color:var(--gold);
+    text-transform:uppercase; margin-bottom:6px; font-weight:700;
+  }
+  .masthead h1{
+    font-family:'Noto Serif KR', serif;
+    font-weight:900; font-size:32px; margin:0; color:var(--ink);
+    letter-spacing:-0.01em;
+  }
+  .masthead .sub{ text-align:right; font-size:13px; color:var(--muted); line-height:1.6; }
+  .formula-strip{
+    margin:18px 0 30px; padding:14px 18px;
+    background:var(--ink); color:#f2ede1;
+    border-radius:4px;
+    font-family:'JetBrains Mono', monospace; font-size:13px;
+    display:flex; gap:28px; flex-wrap:wrap; align-items:center;
+  }
+  .formula-strip .tag{
+    font-weight:700; color:var(--gold-bright); margin-right:8px;
+  }
+
+  /* ---------- Section labels ---------- */
+  .section-label{
+    display:flex; align-items:center; gap:10px;
+    margin:36px 0 14px;
+  }
+  .section-label .num{
+    font-family:'Noto Serif KR', serif; font-weight:900; font-size:14px;
+    color:var(--paper); background:var(--ink);
+    width:26px; height:26px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .section-label h2{
+    font-family:'Noto Serif KR', serif; font-size:19px; margin:0; font-weight:700;
+  }
+  .section-label .line{ flex:1; height:1px; background:var(--line); }
+
+  /* ---------- Cards / grid ---------- */
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .grid-4{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  @media(max-width:760px){ .grid-2{grid-template-columns:1fr;} .grid-4{grid-template-columns:1fr 1fr;} }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:20px 22px;
+  }
+  .card.gong{ border-top:4px solid var(--ink-2); }
+  .card.dan{ border-top:4px solid var(--gold); }
+  .card-title{
+    font-weight:700; font-size:15px; margin:0 0 4px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .card-title .badge{
+    font-family:'JetBrains Mono',monospace; font-size:11px; padding:2px 8px;
+    border-radius:20px; font-weight:700;
+  }
+  .card.gong .badge{ background:#e7ecf5; color:var(--ink-2); }
+  .card.dan .badge{ background:#f6ecd6; color:var(--gold); }
+  .card-desc{ font-size:12px; color:var(--muted); margin-bottom:16px; line-height:1.5; }
+
+  label{
+    display:block; font-size:12px; color:var(--muted); margin-bottom:5px; font-weight:500;
+  }
+  .field{ margin-bottom:14px; }
+  .field:last-child{ margin-bottom:0; }
+  .input-wrap{ position:relative; }
+  .input-wrap input{
+    width:100%; padding:9px 44px 9px 12px;
+    border:1px solid var(--line); border-radius:4px;
+    font-family:'JetBrains Mono',monospace; font-size:14px;
+    background:#fdfcf9; color:var(--ink);
+    transition:border-color .15s, background .15s;
+  }
+  .input-wrap input:focus{
+    outline:none; border-color:var(--ink-2); background:#fff;
+  }
+  .input-wrap .unit{
+    position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    font-size:11px; color:var(--muted); font-weight:600;
+  }
+
+  /* ---------- Result ledger ---------- */
+  .ledger{
+    background:var(--card); border:1px solid var(--line); border-radius:6px;
+    overflow:hidden;
+  }
+  .ledger table{ width:100%; border-collapse:collapse; }
+  .ledger th, .ledger td{
+    padding:12px 16px; text-align:right; font-size:13.5px;
+    border-bottom:1px solid var(--line);
+  }
+  .ledger th:first-child, .ledger td:first-child{ text-align:left; }
+  .ledger thead th{
+    background:var(--ink); color:var(--paper);
+    font-weight:700; font-size:12.5px; letter-spacing:0.02em;
+  }
+  .ledger tbody tr:last-child td{ border-bottom:none; }
+  .ledger td.num, .ledger th.num{ font-family:'JetBrains Mono',monospace; }
+  .ledger tr.subtotal td{ font-weight:700; background:#faf8f2; border-top:1px dashed var(--line); }
+  .ledger tr.final td{
+    font-weight:900; font-size:16px; background:#fbf6e8;
+    border-top:2px solid var(--gold); color:var(--ink);
+  }
+  .row-label small{ display:block; color:var(--muted); font-weight:400; font-size:11px; margin-top:1px; }
+
+  /* ---------- Stamp / verdict ---------- */
+  .verdict{
+    margin-top:26px; display:grid; grid-template-columns:1.3fr 1fr; gap:20px; align-items:stretch;
+  }
+  @media(max-width:760px){ .verdict{ grid-template-columns:1fr; } }
+  .verdict-card{
+    background:var(--ink); color:var(--paper);
+    border-radius:8px; padding:28px 30px; position:relative; overflow:hidden;
+  }
+  .verdict-card::before{
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(circle at 90% 10%, rgba(216,163,28,0.18), transparent 55%);
+  }
+  .verdict-eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.18em;
+    color:var(--gold-bright); text-transform:uppercase; margin-bottom:10px; position:relative;
+  }
+  .verdict-headline{
+    font-family:'Noto Serif KR',serif; font-size:24px; font-weight:900; line-height:1.4; position:relative;
+    margin:0 0 18px;
+  }
+  .verdict-headline .amt{ color:var(--gold-bright); }
+  .verdict-stats{ display:flex; gap:32px; position:relative; flex-wrap:wrap; }
+  .verdict-stats .stat .k{ font-size:11px; color:#b9c0d1; margin-bottom:4px; }
+  .verdict-stats .stat .v{
+    font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; color:#fff;
+  }
+
+  .stamp-wrap{
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line); border-radius:8px; background:var(--card);
+  }
+  .stamp{
+    width:172px; height:172px; border-radius:50%;
+    border:3px solid currentColor;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    transform:rotate(-9deg);
+    font-family:'Noto Serif KR',serif;
+    position:relative;
+  }
+  .stamp::after{
+    content:""; position:absolute; inset:8px; border:1px solid currentColor; border-radius:50%;
+    opacity:0.5;
+  }
+  .stamp .big{ font-size:26px; font-weight:900; letter-spacing:0.05em; }
+  .stamp .small{ font-size:12px; margin-top:6px; font-weight:700; letter-spacing:0.08em; }
+  .stamp.good{ color:var(--good); }
+  .stamp.bad{ color:var(--bad); }
+
+  footer.note{
+    margin-top:40px; padding-top:16px; border-top:1px solid var(--line);
+    font-size:11.5px; color:var(--muted); line-height:1.7;
+  }
 </style>
 </head>
 <body>
 <div id="root"></div>
 
-<script id="rate-db-data" type="application/json">[{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2000-11-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2000-11-15","f":0,"to":50,"b":390,"e":34.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2000-11-15","f":51,"to":100,"b":390,"e":81.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2000-11-15","f":101,"to":200,"b":850,"e":122.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2000-11-15","f":201,"to":300,"b":1500,"e":177.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2000-11-15","f":301,"to":400,"b":3590,"e":308,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2000-11-15","f":401,"to":500,"b":6750,"e":405.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2000-11-15","f":501,"to":99999,"b":11980,"e":639.4,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2002-06-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2002-06-01","f":0,"to":50,"b":370,"e":33,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2002-06-01","f":51,"to":100,"b":370,"e":72,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2002-06-01","f":101,"to":200,"b":660,"e":97.2,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2002-06-01","f":201,"to":300,"b":1170,"e":140.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2002-06-01","f":301,"to":400,"b":2800,"e":202.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2002-06-01","f":401,"to":500,"b":5310,"e":302,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2002-06-01","f":501,"to":99999,"b":9330,"e":525.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2002-06-01","f":0,"to":50,"b":370,"e":33,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2002-06-01","f":51,"to":100,"b":370,"e":78.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2002-06-01","f":101,"to":200,"b":810,"e":117.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2002-06-01","f":201,"to":300,"b":1440,"e":169.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2002-06-01","f":301,"to":400,"b":3440,"e":245.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2002-06-01","f":401,"to":500,"b":6450,"e":360.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2002-06-01","f":501,"to":99999,"b":11440,"e":611.4,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2003-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2003-01-01","f":0,"to":50,"b":370,"e":33,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2003-01-01","f":51,"to":100,"b":370,"e":72,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2003-01-01","f":101,"to":200,"b":660,"e":93.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2003-01-01","f":201,"to":300,"b":1130,"e":135.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2003-01-01","f":301,"to":400,"b":2710,"e":196,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2003-01-01","f":401,"to":500,"b":5130,"e":292,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2003-01-01","f":501,"to":99999,"b":9330,"e":525.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2003-01-01","f":0,"to":50,"b":370,"e":33,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2003-01-01","f":51,"to":100,"b":370,"e":78.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2003-01-01","f":101,"to":200,"b":810,"e":113.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2003-01-01","f":201,"to":300,"b":1390,"e":164.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2003-01-01","f":301,"to":400,"b":3330,"e":237,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2003-01-01","f":401,"to":500,"b":6240,"e":348.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2003-01-01","f":501,"to":99999,"b":11440,"e":611.4,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2004-03-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2004-03-01","f":0,"to":100,"b":370,"e":52,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2004-03-01","f":101,"to":200,"b":660,"e":88.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2004-03-01","f":201,"to":300,"b":1130,"e":127.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2004-03-01","f":301,"to":400,"b":2710,"e":184.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2004-03-01","f":401,"to":500,"b":5130,"e":274.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2004-03-01","f":501,"to":99999,"b":9330,"e":494,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2004-03-01","f":0,"to":100,"b":370,"e":54.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2004-03-01","f":101,"to":200,"b":810,"e":112.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2004-03-01","f":201,"to":300,"b":1390,"e":162.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2004-03-01","f":301,"to":400,"b":3330,"e":235.2,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2004-03-01","f":401,"to":500,"b":6240,"e":345.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2004-03-01","f":501,"to":99999,"b":11440,"e":606.8,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2005-12-28","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2005-12-28","f":0,"to":100,"b":370,"e":52.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2005-12-28","f":101,"to":200,"b":670,"e":89.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2005-12-28","f":201,"to":300,"b":1150,"e":132.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2005-12-28","f":301,"to":400,"b":2830,"e":192.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2005-12-28","f":401,"to":500,"b":5360,"e":288.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2005-12-28","f":501,"to":99999,"b":9770,"e":521.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2005-12-28","f":0,"to":100,"b":370,"e":55.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2005-12-28","f":101,"to":200,"b":820,"e":113.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2005-12-28","f":201,"to":300,"b":1430,"e":168.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2005-12-28","f":301,"to":400,"b":3420,"e":248.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2005-12-28","f":401,"to":500,"b":6410,"e":366.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2005-12-28","f":501,"to":99999,"b":11750,"e":643.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2007-01-15","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2007-01-15","f":0,"to":100,"b":370,"e":52.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2007-01-15","f":101,"to":200,"b":670,"e":89.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2007-01-15","f":201,"to":300,"b":1150,"e":132.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2007-01-15","f":301,"to":400,"b":2830,"e":192.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2007-01-15","f":401,"to":500,"b":5360,"e":288.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2007-01-15","f":501,"to":99999,"b":9770,"e":521.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2007-01-15","f":0,"to":100,"b":370,"e":55.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2007-01-15","f":101,"to":200,"b":820,"e":113.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2007-01-15","f":201,"to":300,"b":1430,"e":168.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2007-01-15","f":301,"to":400,"b":3420,"e":248.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2007-01-15","f":401,"to":500,"b":6410,"e":366.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2007-01-15","f":501,"to":99999,"b":11750,"e":643.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2007-04-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2007-04-01","f":0,"to":100,"b":370,"e":52.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2007-04-01","f":101,"to":200,"b":670,"e":89.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2007-04-01","f":201,"to":300,"b":1150,"e":132.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2007-04-01","f":301,"to":400,"b":2830,"e":192.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2007-04-01","f":401,"to":500,"b":5360,"e":288.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2007-04-01","f":501,"to":99999,"b":9770,"e":521.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2007-04-01","f":0,"to":100,"b":370,"e":55.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2007-04-01","f":101,"to":200,"b":820,"e":113.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2007-04-01","f":201,"to":300,"b":1430,"e":168.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2007-04-01","f":301,"to":400,"b":3420,"e":248.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2007-04-01","f":401,"to":500,"b":6410,"e":366.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2007-04-01","f":501,"to":99999,"b":11750,"e":643.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2008-01-01","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2008-01-01","f":0,"to":100,"b":370,"e":52.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2008-01-01","f":101,"to":200,"b":670,"e":89.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2008-01-01","f":201,"to":300,"b":1150,"e":132.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2008-01-01","f":301,"to":400,"b":2830,"e":192.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2008-01-01","f":401,"to":500,"b":5360,"e":288.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2008-01-01","f":501,"to":99999,"b":9770,"e":521.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2008-01-01","f":0,"to":100,"b":370,"e":55.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2008-01-01","f":101,"to":200,"b":820,"e":113.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2008-01-01","f":201,"to":300,"b":1430,"e":168.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2008-01-01","f":301,"to":400,"b":3420,"e":248.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2008-01-01","f":401,"to":500,"b":6410,"e":366.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2008-01-01","f":501,"to":99999,"b":11750,"e":643.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2008-11-13","f":0,"to":299.999,"b":5660,"e":63.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2008-11-13","f":0,"to":299.999,"b":5660,"e":70.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2008-11-13","f":0,"to":299.999,"b":5660,"e":95.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2008-11-13","f":0,"to":299.999,"b":6510,"e":60.2,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2008-11-13","f":0,"to":299.999,"b":6510,"e":67,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2008-11-13","f":0,"to":299.999,"b":6510,"e":92.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2008-11-13","f":0,"to":299.999,"b":5660,"e":62.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2008-11-13","f":0,"to":299.999,"b":5660,"e":69.2,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2008-11-13","f":0,"to":299.999,"b":5660,"e":94.1,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2008-11-13","f":0,"to":299.999,"b":6510,"e":58.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2008-11-13","f":0,"to":299.999,"b":6510,"e":64.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2008-11-13","f":0,"to":299.999,"b":6510,"e":89.8,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2008-11-13","f":0,"to":299.999,"b":5160,"e":60.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2008-11-13","f":0,"to":299.999,"b":5160,"e":67.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2008-11-13","f":0,"to":299.999,"b":5160,"e":91.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2008-11-13","f":0,"to":100,"b":370,"e":52.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2008-11-13","f":101,"to":200,"b":670,"e":89.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2008-11-13","f":201,"to":300,"b":1150,"e":132.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2008-11-13","f":301,"to":400,"b":2830,"e":192.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2008-11-13","f":401,"to":500,"b":5360,"e":288.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2008-11-13","f":501,"to":99999,"b":9770,"e":521.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2008-11-13","f":0,"to":100,"b":370,"e":55.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2008-11-13","f":101,"to":200,"b":820,"e":113.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2008-11-13","f":201,"to":300,"b":1430,"e":168.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2008-11-13","f":301,"to":400,"b":3420,"e":248.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2008-11-13","f":401,"to":500,"b":6410,"e":366.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2008-11-13","f":501,"to":99999,"b":11750,"e":643.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2009-06-27","f":0,"to":299.999,"b":5790,"e":65.4,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2009-06-27","f":0,"to":299.999,"b":5790,"e":72.2,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2009-06-27","f":0,"to":299.999,"b":5790,"e":98.1,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2009-06-27","f":0,"to":299.999,"b":6660,"e":61.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2009-06-27","f":0,"to":299.999,"b":6660,"e":68.5,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2009-06-27","f":0,"to":299.999,"b":6660,"e":94.7,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2009-06-27","f":0,"to":299.999,"b":5790,"e":64,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2009-06-27","f":0,"to":299.999,"b":5790,"e":70.8,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2009-06-27","f":0,"to":299.999,"b":5790,"e":96.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2009-06-27","f":0,"to":299.999,"b":6660,"e":59.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2009-06-27","f":0,"to":299.999,"b":6660,"e":66.4,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2009-06-27","f":0,"to":299.999,"b":6660,"e":91.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2009-06-27","f":0,"to":299.999,"b":5280,"e":62.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2009-06-27","f":0,"to":299.999,"b":5280,"e":69.5,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2009-06-27","f":0,"to":299.999,"b":5280,"e":93.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2009-06-27","f":0,"to":100,"b":370,"e":52.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2009-06-27","f":101,"to":200,"b":670,"e":89.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2009-06-27","f":201,"to":300,"b":1150,"e":132.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2009-06-27","f":301,"to":400,"b":2830,"e":192.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2009-06-27","f":401,"to":500,"b":5360,"e":288.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2009-06-27","f":501,"to":99999,"b":9770,"e":521.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2009-06-27","f":0,"to":100,"b":370,"e":55.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2009-06-27","f":101,"to":200,"b":820,"e":113.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2009-06-27","f":201,"to":300,"b":1430,"e":168.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2009-06-27","f":301,"to":400,"b":3420,"e":248.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2009-06-27","f":401,"to":500,"b":6410,"e":366.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2009-06-27","f":501,"to":99999,"b":11750,"e":643.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2010-08-01","f":0,"to":299.999,"b":5790,"e":61.2,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2010-08-01","f":0,"to":299.999,"b":5790,"e":77.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2010-08-01","f":0,"to":299.999,"b":5790,"e":98.1,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2010-08-01","f":0,"to":299.999,"b":6660,"e":57.7,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2010-08-01","f":0,"to":299.999,"b":6660,"e":73.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2010-08-01","f":0,"to":299.999,"b":6660,"e":94.7,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2010-08-01","f":0,"to":299.999,"b":5790,"e":60.2,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2010-08-01","f":0,"to":299.999,"b":5790,"e":75.8,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2010-08-01","f":0,"to":299.999,"b":5790,"e":96.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2010-08-01","f":0,"to":299.999,"b":6660,"e":55.8,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2010-08-01","f":0,"to":299.999,"b":6660,"e":71.4,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2010-08-01","f":0,"to":299.999,"b":6660,"e":91.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2010-08-01","f":0,"to":299.999,"b":5280,"e":58.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2010-08-01","f":0,"to":299.999,"b":5280,"e":74.7,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2010-08-01","f":0,"to":299.999,"b":5280,"e":93.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2010-08-01","f":0,"to":100,"b":380,"e":53.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2010-08-01","f":101,"to":200,"b":680,"e":91.2,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2010-08-01","f":201,"to":300,"b":1170,"e":135.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2010-08-01","f":301,"to":400,"b":2890,"e":196.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2010-08-01","f":401,"to":500,"b":5470,"e":294.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2010-08-01","f":501,"to":99999,"b":9970,"e":531.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2010-08-01","f":0,"to":100,"b":380,"e":56.2,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2010-08-01","f":101,"to":200,"b":840,"e":116.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2010-08-01","f":201,"to":300,"b":1460,"e":171.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2010-08-01","f":301,"to":400,"b":3490,"e":253.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2010-08-01","f":401,"to":500,"b":6540,"e":373.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2010-08-01","f":501,"to":99999,"b":11990,"e":656.2,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2011-08-01","f":0,"to":299.999,"b":6160,"e":64.2,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2011-08-01","f":0,"to":299.999,"b":6160,"e":84.4,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2011-08-01","f":0,"to":299.999,"b":6160,"e":102.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2011-08-01","f":0,"to":299.999,"b":7080,"e":60.5,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2011-08-01","f":0,"to":299.999,"b":7080,"e":80,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2011-08-01","f":0,"to":299.999,"b":7080,"e":99.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2011-08-01","f":0,"to":299.999,"b":6160,"e":63.1,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2011-08-01","f":0,"to":299.999,"b":6160,"e":82.2,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2011-08-01","f":0,"to":299.999,"b":6160,"e":101,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2011-08-01","f":0,"to":299.999,"b":7080,"e":58.5,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2011-08-01","f":0,"to":299.999,"b":7080,"e":77.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2011-08-01","f":0,"to":299.999,"b":7080,"e":96.4,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2011-08-01","f":0,"to":299.999,"b":5400,"e":58.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2011-08-01","f":0,"to":299.999,"b":5400,"e":77.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2011-08-01","f":0,"to":299.999,"b":5400,"e":94.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2011-08-01","f":0,"to":100,"b":390,"e":54.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2011-08-01","f":101,"to":200,"b":690,"e":93,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2011-08-01","f":201,"to":300,"b":1190,"e":137.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2011-08-01","f":301,"to":400,"b":2950,"e":200.2,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2011-08-01","f":401,"to":500,"b":5580,"e":300.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2011-08-01","f":501,"to":99999,"b":10170,"e":543.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2011-08-01","f":0,"to":100,"b":390,"e":57.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2011-08-01","f":101,"to":200,"b":860,"e":118.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2011-08-01","f":201,"to":300,"b":1490,"e":175,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2011-08-01","f":301,"to":400,"b":3560,"e":258.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2011-08-01","f":401,"to":500,"b":6670,"e":381.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2011-08-01","f":501,"to":99999,"b":12230,"e":670.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2011-12-05","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2011-12-05","f":0,"to":100,"b":390,"e":54.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2011-12-05","f":101,"to":200,"b":690,"e":93,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2011-12-05","f":201,"to":300,"b":1190,"e":137.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2011-12-05","f":301,"to":400,"b":2950,"e":200.2,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2011-12-05","f":401,"to":500,"b":5580,"e":300.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2011-12-05","f":501,"to":99999,"b":10170,"e":543.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2011-12-05","f":0,"to":100,"b":390,"e":57.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2011-12-05","f":101,"to":200,"b":860,"e":118.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2011-12-05","f":201,"to":300,"b":1490,"e":175,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2011-12-05","f":301,"to":400,"b":3560,"e":258.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2011-12-05","f":401,"to":500,"b":6670,"e":381.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2011-12-05","f":501,"to":99999,"b":12230,"e":670.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2012-01-01","f":0,"to":299.999,"b":6470,"e":65.5,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2012-01-01","f":0,"to":299.999,"b":6470,"e":92.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2012-01-01","f":0,"to":299.999,"b":6470,"e":105,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2012-01-01","f":0,"to":299.999,"b":7430,"e":61.7,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2012-01-01","f":0,"to":299.999,"b":7430,"e":87.8,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2012-01-01","f":0,"to":299.999,"b":7430,"e":101.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2012-01-01","f":0,"to":299.999,"b":6470,"e":64.5,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2012-01-01","f":0,"to":299.999,"b":6470,"e":89.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2012-01-01","f":0,"to":299.999,"b":6470,"e":103.1,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2012-01-01","f":0,"to":299.999,"b":7430,"e":59.7,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2012-01-01","f":0,"to":299.999,"b":7430,"e":85.1,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2012-01-01","f":0,"to":299.999,"b":7430,"e":98.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2012-01-01","f":0,"to":299.999,"b":5610,"e":60.1,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2012-01-01","f":0,"to":299.999,"b":5610,"e":83.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2012-01-01","f":0,"to":299.999,"b":5610,"e":96.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2012-01-01","f":0,"to":100,"b":390,"e":54.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2012-01-01","f":101,"to":200,"b":690,"e":93,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2012-01-01","f":201,"to":300,"b":1190,"e":137.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2012-01-01","f":301,"to":400,"b":2950,"e":200.2,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2012-01-01","f":401,"to":500,"b":5580,"e":300.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2012-01-01","f":501,"to":99999,"b":10170,"e":543.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2012-01-01","f":0,"to":100,"b":390,"e":57.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2012-01-01","f":101,"to":200,"b":860,"e":118.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2012-01-01","f":201,"to":300,"b":1490,"e":175,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2012-01-01","f":301,"to":400,"b":3560,"e":258.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2012-01-01","f":401,"to":500,"b":6670,"e":381.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2012-01-01","f":501,"to":99999,"b":12230,"e":670.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2012-08-06","f":0,"to":299.999,"b":null,"e":null,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2012-08-06","f":0,"to":100,"b":390,"e":55,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2012-08-06","f":101,"to":200,"b":700,"e":94.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2012-08-06","f":201,"to":300,"b":1210,"e":140.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2012-08-06","f":301,"to":400,"b":3030,"e":205.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2012-08-06","f":401,"to":500,"b":5780,"e":310.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2012-08-06","f":501,"to":99999,"b":10270,"e":548.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2012-08-06","f":0,"to":100,"b":390,"e":57.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2012-08-06","f":101,"to":200,"b":870,"e":120.2,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2012-08-06","f":201,"to":300,"b":1530,"e":179.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2012-08-06","f":301,"to":400,"b":3680,"e":267.8,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2012-08-06","f":401,"to":500,"b":6970,"e":398.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2012-08-06","f":501,"to":99999,"b":12350,"e":677.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2013-01-14","f":0,"to":299.999,"b":6990,"e":70.8,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2013-01-14","f":0,"to":299.999,"b":6990,"e":100,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2013-01-14","f":0,"to":299.999,"b":6990,"e":113.4,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2013-01-14","f":0,"to":299.999,"b":8020,"e":66.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2013-01-14","f":0,"to":299.999,"b":8020,"e":94.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2013-01-14","f":0,"to":299.999,"b":8020,"e":109.5,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2013-01-14","f":0,"to":299.999,"b":6990,"e":69.7,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2013-01-14","f":0,"to":299.999,"b":6990,"e":97.2,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2013-01-14","f":0,"to":299.999,"b":6990,"e":111.4,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2013-01-14","f":0,"to":299.999,"b":8020,"e":64.5,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2013-01-14","f":0,"to":299.999,"b":8020,"e":92,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2013-01-14","f":0,"to":299.999,"b":8020,"e":106.2,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2013-01-14","f":0,"to":299.999,"b":5990,"e":64.1,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2013-01-14","f":0,"to":299.999,"b":5990,"e":88.8,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2013-01-14","f":0,"to":299.999,"b":5990,"e":102.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2013-01-14","f":0,"to":100,"b":410,"e":56.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2013-01-14","f":101,"to":200,"b":710,"e":96.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2013-01-14","f":201,"to":300,"b":1230,"e":143.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2013-01-14","f":301,"to":400,"b":3090,"e":209.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2013-01-14","f":401,"to":500,"b":5900,"e":317.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2013-01-14","f":501,"to":99999,"b":10480,"e":559.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2013-01-14","f":0,"to":100,"b":400,"e":59.1,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2013-01-14","f":101,"to":200,"b":890,"e":122.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2013-01-14","f":201,"to":300,"b":1560,"e":183,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2013-01-14","f":301,"to":400,"b":3750,"e":273,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2013-01-14","f":401,"to":500,"b":7110,"e":406.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2013-01-14","f":501,"to":99999,"b":12600,"e":690.8,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2013-11-21","f":0,"to":299.999,"b":7170,"e":71.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2013-11-21","f":0,"to":299.999,"b":7170,"e":103.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2013-11-21","f":0,"to":299.999,"b":7170,"e":115.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2013-11-21","f":0,"to":299.999,"b":8230,"e":67.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2013-11-21","f":0,"to":299.999,"b":8230,"e":98.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2013-11-21","f":0,"to":299.999,"b":8230,"e":111.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2013-11-21","f":0,"to":299.999,"b":7170,"e":70.8,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2013-11-21","f":0,"to":299.999,"b":7170,"e":100.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2013-11-21","f":0,"to":299.999,"b":7170,"e":113.8,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2013-11-21","f":0,"to":299.999,"b":8230,"e":65.5,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2013-11-21","f":0,"to":299.999,"b":8230,"e":95.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2013-11-21","f":0,"to":299.999,"b":8230,"e":108.5,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2013-11-21","f":0,"to":299.999,"b":6160,"e":65.2,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2013-11-21","f":0,"to":299.999,"b":6160,"e":92.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2013-11-21","f":0,"to":299.999,"b":6160,"e":105.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2013-11-21","f":0,"to":100,"b":410,"e":57.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2013-11-21","f":101,"to":200,"b":1260,"e":98.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2013-11-21","f":201,"to":300,"b":6060,"e":147.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2013-11-21","f":301,"to":400,"b":7300,"e":215.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2013-11-21","f":401,"to":500,"b":6060,"e":325.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2013-11-21","f":501,"to":99999,"b":10760,"e":574.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2013-11-21","f":0,"to":100,"b":410,"e":60.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2013-11-21","f":101,"to":200,"b":910,"e":125.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2013-11-21","f":201,"to":300,"b":1600,"e":187.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2013-11-21","f":301,"to":400,"b":3850,"e":280.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2013-11-21","f":401,"to":500,"b":7300,"e":417.7,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2013-11-21","f":501,"to":99999,"b":12940,"e":709.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2017-01-01","f":0,"to":200,"b":730,"e":78.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2017-01-01","f":201,"to":400,"b":1260,"e":147.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2017-01-01","f":401,"to":1000,"b":6060,"e":215.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2017-01-01","f":1001,"to":99999,"b":7300,"e":574.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2017-01-01","f":0,"to":200,"b":910,"e":93.3,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2017-01-01","f":201,"to":400,"b":1600,"e":187.9,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2017-01-01","f":401,"to":1000,"b":7300,"e":280.6,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2017-01-01","f":1001,"to":99999,"b":7300,"e":709.5,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2019-07-01","f":0,"to":200,"b":730,"e":78.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2019-07-01","f":201,"to":400,"b":1260,"e":147.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2019-07-01","f":401,"to":99999,"b":6060,"e":215.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2019-07-01","f":0,"to":200,"b":730,"e":78.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2019-07-01","f":201,"to":400,"b":1260,"e":147.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2019-07-01","f":401,"to":1000,"b":6060,"e":215.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2019-07-01","f":1001,"to":99999,"b":6060,"e":574.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2019-07-01","f":0,"to":300,"b":730,"e":78.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2019-07-01","f":301,"to":450,"b":1260,"e":147.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2019-07-01","f":451,"to":1000,"b":6060,"e":215.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2019-07-01","f":1001,"to":99999,"b":6060,"e":574.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2019-07-01","f":0,"to":200,"b":910,"e":93.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2019-07-01","f":201,"to":400,"b":1600,"e":187.9,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2019-07-01","f":401,"to":99999,"b":7300,"e":280.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2019-07-01","f":0,"to":200,"b":910,"e":93.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2019-07-01","f":201,"to":400,"b":1600,"e":187.9,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2019-07-01","f":401,"to":1000,"b":7300,"e":280.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2019-07-01","f":1001,"to":99999,"b":7300,"e":709.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2019-07-01","f":0,"to":300,"b":910,"e":93.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2019-07-01","f":301,"to":450,"b":1600,"e":187.9,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2019-07-01","f":451,"to":1000,"b":7300,"e":280.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2019-07-01","f":1001,"to":99999,"b":7300,"e":709.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2022-01-01","f":0,"to":200,"b":730,"e":73.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2022-01-01","f":201,"to":400,"b":1260,"e":142.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2022-01-01","f":401,"to":99999,"b":6060,"e":210.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-01-01","f":0,"to":200,"b":730,"e":73.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-01-01","f":201,"to":400,"b":1260,"e":142.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-01-01","f":401,"to":1000,"b":6060,"e":210.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-01-01","f":1001,"to":99999,"b":6060,"e":569.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-01-01","f":0,"to":300,"b":730,"e":73.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-01-01","f":301,"to":450,"b":1260,"e":142.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-01-01","f":451,"to":1000,"b":6060,"e":210.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-01-01","f":1001,"to":99999,"b":6060,"e":569.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2022-01-01","f":0,"to":200,"b":910,"e":88.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2022-01-01","f":201,"to":400,"b":1600,"e":182.9,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2022-01-01","f":401,"to":99999,"b":7300,"e":275.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-01-01","f":0,"to":200,"b":910,"e":88.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-01-01","f":201,"to":400,"b":1600,"e":182.9,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-01-01","f":401,"to":1000,"b":7300,"e":275.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-01-01","f":1001,"to":99999,"b":7300,"e":704.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-01-01","f":0,"to":300,"b":910,"e":88.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-01-01","f":301,"to":450,"b":1600,"e":182.9,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-01-01","f":451,"to":1000,"b":7300,"e":275.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-01-01","f":1001,"to":99999,"b":7300,"e":704.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2022-04-01","f":0,"to":200,"b":730,"e":78.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2022-04-01","f":201,"to":400,"b":1260,"e":147.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2022-04-01","f":401,"to":99999,"b":6060,"e":215.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-04-01","f":0,"to":200,"b":730,"e":78.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-04-01","f":201,"to":400,"b":1260,"e":147.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-04-01","f":401,"to":1000,"b":6060,"e":215.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-04-01","f":1001,"to":99999,"b":6060,"e":574.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-04-01","f":0,"to":300,"b":730,"e":78.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-04-01","f":301,"to":450,"b":1260,"e":147.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-04-01","f":451,"to":1000,"b":6060,"e":215.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-04-01","f":1001,"to":99999,"b":6060,"e":574.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2022-04-01","f":0,"to":200,"b":910,"e":93.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2022-04-01","f":201,"to":400,"b":1600,"e":187.8,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2022-04-01","f":401,"to":99999,"b":7300,"e":280.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-04-01","f":0,"to":200,"b":910,"e":93.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-04-01","f":201,"to":400,"b":1600,"e":187.8,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-04-01","f":401,"to":1000,"b":7300,"e":280.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-04-01","f":1001,"to":99999,"b":7300,"e":709.4,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-04-01","f":0,"to":300,"b":910,"e":93.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-04-01","f":301,"to":450,"b":1600,"e":187.8,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-04-01","f":451,"to":1000,"b":7300,"e":280.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-04-01","f":1001,"to":99999,"b":7300,"e":709.4,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2022-07-01","f":0,"to":200,"b":730,"e":78.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2022-07-01","f":201,"to":400,"b":1260,"e":147.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2022-07-01","f":401,"to":99999,"b":6060,"e":215.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-07-01","f":0,"to":200,"b":730,"e":78.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-07-01","f":201,"to":400,"b":1260,"e":147.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-07-01","f":401,"to":1000,"b":6060,"e":215.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-07-01","f":1001,"to":99999,"b":6060,"e":574.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-07-01","f":0,"to":300,"b":730,"e":78.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-07-01","f":301,"to":450,"b":1260,"e":147.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-07-01","f":451,"to":1000,"b":6060,"e":215.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-07-01","f":1001,"to":99999,"b":6060,"e":574.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2022-07-01","f":0,"to":200,"b":910,"e":93.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2022-07-01","f":201,"to":400,"b":1600,"e":187.8,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2022-07-01","f":401,"to":99999,"b":7300,"e":280.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-07-01","f":0,"to":200,"b":910,"e":93.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-07-01","f":201,"to":400,"b":1600,"e":187.8,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-07-01","f":401,"to":1000,"b":7300,"e":280.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-07-01","f":1001,"to":99999,"b":7300,"e":709.4,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-07-01","f":0,"to":300,"b":910,"e":93.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-07-01","f":301,"to":450,"b":1600,"e":187.8,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-07-01","f":451,"to":1000,"b":7300,"e":280.5,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-07-01","f":1001,"to":99999,"b":7300,"e":709.4,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2022-10-01","f":0,"to":200,"b":730,"e":85.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2022-10-01","f":201,"to":400,"b":1260,"e":154.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2022-10-01","f":401,"to":99999,"b":6060,"e":222.9,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-10-01","f":0,"to":200,"b":730,"e":85.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-10-01","f":201,"to":400,"b":1260,"e":154.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-10-01","f":401,"to":1000,"b":6060,"e":222.9,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2022-10-01","f":1001,"to":99999,"b":6060,"e":581.9,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-10-01","f":0,"to":300,"b":730,"e":85.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-10-01","f":301,"to":450,"b":1260,"e":154.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-10-01","f":451,"to":1000,"b":6060,"e":222.9,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2022-10-01","f":1001,"to":99999,"b":6060,"e":581.9,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2022-10-01","f":0,"to":200,"b":910,"e":100.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2022-10-01","f":201,"to":400,"b":1600,"e":195.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2022-10-01","f":401,"to":99999,"b":7300,"e":287.9,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-10-01","f":0,"to":200,"b":910,"e":100.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-10-01","f":201,"to":400,"b":1600,"e":195.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-10-01","f":401,"to":1000,"b":7300,"e":287.9,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2022-10-01","f":1001,"to":99999,"b":7300,"e":716.8,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-10-01","f":0,"to":300,"b":910,"e":100.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-10-01","f":301,"to":450,"b":1600,"e":195.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-10-01","f":451,"to":1000,"b":7300,"e":287.9,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2022-10-01","f":1001,"to":99999,"b":7300,"e":716.8,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2023-01-01","f":0,"to":200,"b":730,"e":97,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2023-01-01","f":201,"to":400,"b":1260,"e":166,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2023-01-01","f":401,"to":99999,"b":6060,"e":234.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2023-01-01","f":0,"to":200,"b":730,"e":97,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2023-01-01","f":201,"to":400,"b":1260,"e":166,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2023-01-01","f":401,"to":1000,"b":6060,"e":234.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2023-01-01","f":1001,"to":99999,"b":6060,"e":593.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2023-01-01","f":0,"to":300,"b":730,"e":97,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2023-01-01","f":301,"to":450,"b":1260,"e":166,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2023-01-01","f":451,"to":1000,"b":6060,"e":234.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2023-01-01","f":1001,"to":99999,"b":6060,"e":593.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2023-01-01","f":0,"to":200,"b":910,"e":112,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2023-01-01","f":201,"to":400,"b":1600,"e":206.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2023-01-01","f":401,"to":99999,"b":7300,"e":299.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2023-01-01","f":0,"to":200,"b":910,"e":120,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2023-01-01","f":201,"to":400,"b":1600,"e":214.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2023-01-01","f":401,"to":1000,"b":7300,"e":307.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2023-01-01","f":1001,"to":99999,"b":7300,"e":728.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2023-01-01","f":0,"to":300,"b":910,"e":112,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2023-01-01","f":301,"to":450,"b":1600,"e":206.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2023-01-01","f":451,"to":1000,"b":7300,"e":299.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2023-01-01","f":1001,"to":99999,"b":7300,"e":728.2,"fu":5,"cl":9,"fd":3.7},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"기타","st":"2023-05-16","f":0,"to":299.999,"b":7170,"e":98.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"동계","st":"2023-05-16","f":0,"to":299.999,"b":7170,"e":130.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅰ","s":"하계","st":"2023-05-16","f":0,"to":299.999,"b":7170,"e":142.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"기타","st":"2023-05-16","f":0,"to":299.999,"b":8230,"e":94.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"동계","st":"2023-05-16","f":0,"to":299.999,"b":8230,"e":125,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압A","o":"선택Ⅱ","s":"하계","st":"2023-05-16","f":0,"to":299.999,"b":8230,"e":138.6,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"기타","st":"2023-05-16","f":0,"to":299.999,"b":7170,"e":97.5,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"동계","st":"2023-05-16","f":0,"to":299.999,"b":7170,"e":127.3,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅰ","s":"하계","st":"2023-05-16","f":0,"to":299.999,"b":7170,"e":140.5,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"기타","st":"2023-05-16","f":0,"to":299.999,"b":8230,"e":92.2,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"동계","st":"2023-05-16","f":0,"to":299.999,"b":8230,"e":122,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"고압B","o":"선택Ⅱ","s":"하계","st":"2023-05-16","f":0,"to":299.999,"b":8230,"e":135.2,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"기타","st":"2023-05-16","f":0,"to":299.999,"b":6160,"e":91.9,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"동계","st":"2023-05-16","f":0,"to":299.999,"b":6160,"e":119,"fu":null,"cl":null,"fd":null},{"t":"일반용전력(갑)Ⅰ","v":"저압전력","o":"","s":"하계","st":"2023-05-16","f":0,"to":299.999,"b":6160,"e":132.4,"fu":null,"cl":null,"fd":null},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2023-05-16","f":0,"to":200,"b":730,"e":105,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2023-05-16","f":201,"to":400,"b":1260,"e":174,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2023-05-16","f":401,"to":99999,"b":6060,"e":242.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2023-05-16","f":0,"to":200,"b":730,"e":105,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2023-05-16","f":201,"to":400,"b":1260,"e":174,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2023-05-16","f":401,"to":1000,"b":6060,"e":242.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2023-05-16","f":1001,"to":99999,"b":6060,"e":601.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2023-05-16","f":0,"to":300,"b":730,"e":105,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2023-05-16","f":301,"to":450,"b":1260,"e":174,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2023-05-16","f":451,"to":1000,"b":6060,"e":242.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2023-05-16","f":1001,"to":99999,"b":6060,"e":601.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2023-05-16","f":0,"to":200,"b":910,"e":120,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2023-05-16","f":201,"to":400,"b":1600,"e":214.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2023-05-16","f":401,"to":99999,"b":7300,"e":307.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2023-05-16","f":0,"to":200,"b":910,"e":120,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2023-05-16","f":201,"to":400,"b":1600,"e":214.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2023-05-16","f":401,"to":1000,"b":7300,"e":307.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2023-05-16","f":1001,"to":99999,"b":7300,"e":736.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2023-05-16","f":0,"to":300,"b":910,"e":120,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2023-05-16","f":301,"to":450,"b":1600,"e":214.6,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2023-05-16","f":451,"to":1000,"b":7300,"e":307.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2023-05-16","f":1001,"to":99999,"b":7300,"e":736.2,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2023-11-09","f":0,"to":200,"b":730,"e":105,"fu":5,"cl":9,"fd":3.2},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2023-11-09","f":201,"to":400,"b":1260,"e":174,"fu":5,"cl":9,"fd":3.2},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2023-11-09","f":401,"to":99999,"b":6060,"e":242.3,"fu":5,"cl":9,"fd":3.2},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2023-11-09","f":0,"to":200,"b":730,"e":105,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2023-11-09","f":201,"to":400,"b":1260,"e":174,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2023-11-09","f":401,"to":1000,"b":6060,"e":242.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2023-11-09","f":1001,"to":99999,"b":6060,"e":601.3,"fu":5,"cl":9,"fd":3.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2023-11-09","f":0,"to":300,"b":730,"e":105,"fu":5,"cl":9,"fd":3.2},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2023-11-09","f":301,"to":450,"b":1260,"e":174,"fu":5,"cl":9,"fd":3.2},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2023-11-09","f":451,"to":1000,"b":6060,"e":242.3,"fu":5,"cl":9,"fd":3.2},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2023-11-09","f":1001,"to":99999,"b":6060,"e":601.3,"fu":5,"cl":9,"fd":3.2},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2024-01-01","f":0,"to":200,"b":730,"e":105,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2024-01-01","f":201,"to":400,"b":1260,"e":174,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2024-01-01","f":401,"to":1000,"b":6060,"e":242.3,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"고압","o":"","s":"기타","st":"2024-01-01","f":1001,"to":99999,"b":6060,"e":601.3,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2024-01-01","f":0,"to":200,"b":730,"e":105,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2024-01-01","f":201,"to":400,"b":1260,"e":174,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2024-01-01","f":401,"to":1000,"b":6060,"e":242.3,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"고압","o":"","s":"동계","st":"2024-01-01","f":1001,"to":99999,"b":6060,"e":601.3,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2024-01-01","f":0,"to":300,"b":730,"e":105,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2024-01-01","f":301,"to":450,"b":1260,"e":174,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2024-01-01","f":451,"to":1000,"b":6060,"e":242.3,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"고압","o":"","s":"하계","st":"2024-01-01","f":1001,"to":99999,"b":6060,"e":601.3,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2024-01-01","f":0,"to":200,"b":910,"e":120,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2024-01-01","f":201,"to":400,"b":1600,"e":214.6,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"저압","o":"","s":"기타","st":"2024-01-01","f":401,"to":99999,"b":7300,"e":307.3,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2024-01-01","f":0,"to":200,"b":910,"e":120,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2024-01-01","f":201,"to":400,"b":1600,"e":214.6,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2024-01-01","f":401,"to":1000,"b":7300,"e":307.3,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"저압","o":"","s":"동계","st":"2024-01-01","f":1001,"to":99999,"b":7300,"e":736.3,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2024-01-01","f":0,"to":300,"b":910,"e":120,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2024-01-01","f":301,"to":450,"b":1600,"e":214.6,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2024-01-01","f":451,"to":1000,"b":7300,"e":307.3,"fu":5,"cl":9,"fd":2.7},{"t":"주택용전력","v":"저압","o":"","s":"하계","st":"2024-01-01","f":1001,"to":99999,"b":7300,"e":736.2,"fu":5,"cl":9,"fd":2.7}]</script>
-
-<script>
+<script type="text/babel" data-presets="react">
 const { useState, useMemo } = React;
-const h = React.createElement;
 
-const RATE_DB = JSON.parse(document.getElementById('rate-db-data').textContent);
-
-function toNum(v){
+/* ---------- helpers ---------- */
+const toNum = (v) => {
   if (v === "" || v === null || v === undefined) return 0;
-  const n = parseFloat(String(v).replace(/,/g,""));
+  const n = Number(String(v).replace(/,/g, ""));
   return isNaN(n) ? 0 : n;
-}
-function fmt(n){ return Math.round(n).toLocaleString('ko-KR'); }
+};
+const fmt = (n) => Math.round(n).toLocaleString("ko-KR");
+const round10Down = (n) => Math.floor(n / 10) * 10;
 
-function seasonForMonth(month, availSeasons){
-  if (availSeasons.size === 1 && availSeasons.has('기타')) return '기타';
-  if (month === 7 || month === 8) return availSeasons.has('하계') ? '하계' : '기타';
-  if (month === 12 || month === 1 || month === 2) return availSeasons.has('동계') ? '동계' : '기타';
-  return '기타';
-}
-
-// find the point-in-time applicable rate rows for a given type/voltage/option/date
-function findRateRows(type, voltage, option, dateStr){
-  const target = new Date(dateStr + 'T00:00:00');
-  const month = target.getMonth() + 1;
-  const pool = RATE_DB.filter(r => r.t === type && r.v === voltage && (option === '' || r.o === option));
-  const valid = pool.filter(r => new Date(r.st + 'T00:00:00') <= target);
-  if (valid.length === 0) return { applied: null, season: null, rows: [] };
-  const latestStart = valid.reduce((m, r) => r.st > m ? r.st : m, valid[0].st);
-  const latest = valid.filter(r => r.st === latestStart);
-  const availSeasons = new Set(latest.map(r => r.s));
-  const season = seasonForMonth(month, availSeasons);
-  const rows = latest.filter(r => r.s === season).sort((a,b) => a.f - b.f);
-  return { applied: latestStart, season, rows };
-}
-
-function Field(props){
-  const { label, unit, value, onChange, type, options } = props;
-  if (type === 'select') {
-    return h('div', {className:"field"},
-      h('label', null, label, unit ? h('span',{className:"unit"}, " ("+unit+")") : null),
-      h('select', { value, onChange: e => onChange(e.target.value) },
-        options.map(o => h('option', {key:o, value:o}, o))
-      )
-    );
-  }
-  return h('div', {className:"field"},
-    h('label', null, label, unit ? h('span',{className:"unit"}, " ("+unit+")") : null),
-    h('input', {
-      type: type || 'text',
-      value,
-      onChange: e => onChange(e.target.value)
-    })
+function NumberField({ label, sub, value, onChange, unit }) {
+  return (
+    <div className="field">
+      <label>{label}{sub ? <small style={{display:"block",fontWeight:400,marginTop:2}}>{sub}</small> : null}</label>
+      <div className="input-wrap">
+        <input
+          inputMode="numeric"
+          value={value}
+          onChange={(e) => onChange(e.target.value.replace(/[^0-9]/g, ""))}
+          onBlur={(e) => onChange(String(toNum(e.target.value)))}
+        />
+        {unit ? <span className="unit">{unit}</span> : null}
+      </div>
+    </div>
   );
 }
 
-function App(){
-  const [ctype, setCtype] = useState('주택용전력');
-  const [voltage, setVoltage] = useState('고압');
-  const [option, setOption] = useState('선택Ⅰ');
-  const [billMonth, setBillMonth] = useState('2026-07');
-  const [households, setHouseholds] = useState('930');
-  const [contractPower, setContractPower] = useState('500');
-  const [usage, setUsage] = useState('350000');
-  const [vatRate, setVatRate] = useState('10');
-  const [fundRateDefault, setFundRateDefault] = useState('2.7');
-  const [climateDefault, setClimateDefault] = useState('9');
-  const [fuelDefault, setFuelDefault] = useState('5');
+function computeCharge({ basic, energy, climate, fuel }) {
+  const subtotal = basic + energy + climate + fuel;
+  const vat = round10Down(subtotal * 0.1);
+  const fund = round10Down(subtotal * 0.037);
+  const final = subtotal + vat + fund;
+  return { basic, energy, climate, fuel, subtotal, vat, fund, final };
+}
 
-  const voltageOptions = ctype === '주택용전력' ? ['저압','고압'] : ['저압전력','고압A','고압B'];
+function App() {
+  // 기본 정보
+  const [households, setHouseholds] = useState("300");      // 세대수
+  const [appliedPower, setAppliedPower] = useState("2393");  // 요금적용전력
+  const [houseUsage, setHouseUsage] = useState("523053");    // 세대사용량
+  const [commonUsage, setCommonUsage] = useState("98106");   // 공용사용량
 
-  const calc = useMemo(() => {
-    const dateStr = billMonth + '-15'; // mid-month anchor for point-in-time lookup
-    const opt = ctype === '일반용전력(갑)Ⅰ' ? option : '';
-    const { applied, season, rows } = findRateRows(ctype, voltage, opt, dateStr);
+  // 종합요금 (주택용저압 세대합 + 일반용전력 공용)
+  const [gBasic, setGBasic] = useState("7884430");
+  const [gEnergy, setGEnergy] = useState("128128069");
+  const [gClimate, setGClimate] = useState("5590431");
+  const [gFuel, setGFuel] = useState("3105795");
 
-    if (!rows.length) {
-      return { error: '해당 조건에 맞는 요금 이력이 DB에 없습니다.' };
-    }
+  // 단일요금 (주택용고압 전체)
+  const [dBasic, setDBasic] = useState("5149730");
+  const [dEnergy, setDEnergy] = useState("109211555");
+  const [dClimate, setDClimate] = useState("5590431");
+  const [dFuel, setDFuel] = useState("3105795");
 
-    const hh = toNum(households);
-    const power = toNum(contractPower);
-    const u = toNum(usage);
-    const vr = toNum(vatRate) / 100;
+  const gonghap = useMemo(() => computeCharge({
+    basic: toNum(gBasic), energy: toNum(gEnergy), climate: toNum(gClimate), fuel: toNum(gFuel)
+  }), [gBasic, gEnergy, gClimate, gFuel]);
 
-    let basic = 0, energy = 0, climateRate = null, fuelRate = null, fundRate = null;
-    const tierBreakdown = [];
+  const dan_il = useMemo(() => computeCharge({
+    basic: toNum(dBasic), energy: toNum(dEnergy), climate: toNum(dClimate), fuel: toNum(dFuel)
+  }), [dBasic, dEnergy, dClimate, dFuel]);
 
-    if (ctype === '주택용전력') {
-      const avg = hh > 0 ? u / hh : 0;
-      const basicRow = rows.find(r => avg >= r.f && avg <= r.to) || rows[rows.length - 1];
-      basic = (basicRow.b || 0) * hh;
-      // tier boundaries in the DB are PER-HOUSEHOLD kWh; scale by household count
-      // to get the absolute (whole-complex) tier boundaries before clamping total usage.
-      for (const r of rows) {
-        const tierFrom = r.f * hh;
-        const tierTo = r.to * hh;
-        const portion = Math.max(0, Math.min(u, tierTo) - tierFrom + hh);
-        if (portion > 0) {
-          const charge = Math.floor(portion * r.e);
-          energy += charge;
-          tierBreakdown.push({ from: tierFrom, to: tierTo, usage: portion, rate: r.e, charge });
-        }
-        if (r.cl != null) climateRate = r.cl;
-        if (r.fu != null) fuelRate = r.fu;
-        if (r.fd != null) fundRate = r.fd;
-      }
-    } else {
-      const r = rows[0];
-      basic = Math.round((r.b || 0) * power);
-      energy = Math.floor(u * (r.e || 0));
-      tierBreakdown.push({ from: 0, to: '∞', usage: u, rate: r.e, charge: energy });
-      if (r.cl != null) climateRate = r.cl;
-      if (r.fu != null) fuelRate = r.fu;
-      if (r.fd != null) fundRate = r.fd;
-    }
+  const hh = Math.max(toNum(households), 1);
+  const diff = gonghap.final - dan_il.final;          // 종합 - 단일 (양수면 단일이 유리)
+  const cheaper = diff > 0 ? "단일" : diff < 0 ? "종합" : "동일";
+  const savingMonthly = Math.abs(diff);
+  const savingAnnual = savingMonthly * 12;
+  const savingPerHH = savingMonthly / hh;
+  const savingPerHHAnnual = savingAnnual / hh;
 
-    const usedDefaultClimate = climateRate == null;
-    const usedDefaultFuel = fuelRate == null;
-    const usedDefaultFund = fundRate == null;
-    if (climateRate == null) climateRate = toNum(climateDefault);
-    if (fuelRate == null) fuelRate = toNum(fuelDefault);
-    if (fundRate == null) fundRate = toNum(fundRateDefault);
+  const totalUsage = toNum(houseUsage) + toNum(commonUsage);
 
-    const climateFee = Math.floor(u * climateRate);
-    const fuelFee = Math.floor(u * fuelRate);
-    const subtotal = basic + energy + climateFee + fuelFee;
-    const vat = Math.round(subtotal * vr);
-    const fund = Math.floor(subtotal * (fundRate/100) / 10) * 10;
-    const final = subtotal + vat + fund;
+  const rows = [
+    { key: "basic", label: "기본요금" },
+    { key: "energy", label: "전력량요금" },
+    { key: "climate", label: "기후환경요금" },
+    { key: "fuel", label: "연료비조정액" },
+  ];
 
-    return {
-      applied, season, tierBreakdown, basic, energy, climateFee, fuelFee, climateRate, fuelRate, fundRate,
-      usedDefaultClimate, usedDefaultFuel, usedDefaultFund,
-      subtotal, vat, fund, final, avg: hh>0? u/hh : 0
-    };
-  }, [ctype, voltage, option, billMonth, households, contractPower, usage, vatRate, fundRateDefault, climateDefault, fuelDefault]);
+  return (
+    <div>
+      <div className="masthead">
+        <div>
+          <div className="eyebrow">KEPCO 사이버지점 자료 기반 · 공동주택 전기요금 진단</div>
+          <h1>GBS G-123 전기요금 분석기</h1>
+        </div>
+        <div className="sub">
+          종합계약 vs 단일계약 비교<br/>
+          기준월 청구자료 입력 → 부가세·기금 포함 최종 비교
+        </div>
+      </div>
 
-  return h(React.Fragment, null,
-    h('div', {className:"masthead"},
-      h('div', null,
-        h('div', {className:"eyebrow"}, "G-123 · Rate DB Engine"),
-        h('h1', null, "요금DB 계산기 (2000~2026)"),
-        h('div', {className:"sub"}, "01_요금DB의 주택용·일반용 요금이력 669건을 그대로 내장하여, 임의의 청구년월과 사용량을 넣으면 해당 시점에 실제 적용되던 요금표를 자동으로 찾아 계산합니다.")
-      ),
-      h('div', {className:"tag"}, "DB " + RATE_DB.length + "건 내장")
-    ),
+      <div className="formula-strip">
+        <div><span className="tag">종합</span>세대합(주택용저압) + 공용(일반용전력)</div>
+        <div style={{opacity:0.5}}>vs</div>
+        <div><span className="tag">단일</span>세대+공용 전체를 주택용고압 하나로 통합 산정</div>
+      </div>
 
-    h('div', {className:"layout"},
+      {/* ---------- 기본 정보 ---------- */}
+      <div className="section-label">
+        <div className="num">1</div>
+        <h2>기본 정보</h2>
+        <div className="line"></div>
+      </div>
+      <div className="card">
+        <div className="grid-4">
+          <NumberField label="세대수" unit="세대" value={households} onChange={setHouseholds} />
+          <NumberField label="요금적용전력" unit="kW" value={appliedPower} onChange={setAppliedPower} />
+          <NumberField label="세대사용량" unit="kWh" value={houseUsage} onChange={setHouseUsage} />
+          <NumberField label="공용사용량" unit="kWh" value={commonUsage} onChange={setCommonUsage} />
+        </div>
+        <div style={{marginTop:14, fontSize:12, color:"var(--muted)"}}>
+          총 사용량 <span className="mono" style={{color:"var(--ink)", fontWeight:700}}>{fmt(totalUsage)} kWh</span>
+          {"  ·  "}세대당 평균 사용량{" "}
+          <span className="mono" style={{color:"var(--ink)", fontWeight:700}}>{fmt(toNum(houseUsage)/hh)} kWh</span>
+        </div>
+      </div>
 
-      h('div', {className:"panel"},
-        h('div', {className:"panel-head"},
-          h('div', {className:"idx"}, "1"),
-          h('div', null, h('h2', null, "계약 조건 입력"), h('p', null, "계약종별·전압구분·청구년월을 먼저 정합니다"))
-        ),
-        h('div', {className:"panel-body"},
-          h('div', {className:"grid grid-4"},
-            h(Field, { label:"계약종별", type:"select", value:ctype,
-              onChange: v => { setCtype(v); setVoltage(v==='주택용전력' ? '고압' : '저압전력'); },
-              options: ['주택용전력','일반용전력(갑)Ⅰ'] }),
-            h(Field, { label:"전압구분", type:"select", value:voltage, onChange:setVoltage, options: voltageOptions }),
-            ctype === '일반용전력(갑)Ⅰ' ? h(Field, { label:"선택요금", type:"select", value:option, onChange:setOption, options:['선택Ⅰ','선택Ⅱ'] }) : h('div'),
-            h(Field, { label:"청구년월", type:"month", value:billMonth, onChange:setBillMonth })
-          ),
-          h('div', {className:"grid grid-3", style:{marginTop:"14px"}},
-            ctype === '주택용전력'
-              ? h(Field, { label:"세대수", unit:"호", value:households, onChange:setHouseholds })
-              : h(Field, { label:"계약전력", unit:"kW", value:contractPower, onChange:setContractPower }),
-            h(Field, { label:"사용량", unit:"kWh", value:usage, onChange:setUsage })
-          ),
-          calc.error
-            ? h('div', {className:"warn-box"}, calc.error)
-            : h('div', {className:"note"},
-                "적용 요금표 시행일: " + (calc.applied || '-') + " · 판정 계절: " + (calc.season || '-') +
-                (ctype === '주택용전력' ? (" · 세대평균 " + calc.avg.toFixed(2) + "kWh") : "")
-              )
-        )
-      ),
+      {/* ---------- 요금 입력 ---------- */}
+      <div className="section-label">
+        <div className="num">2</div>
+        <h2>한전 사이버지점 청구 내역 입력</h2>
+        <div className="line"></div>
+      </div>
+      <div className="grid-2">
+        <div className="card gong">
+          <div className="card-title">종합계약 <span className="badge">주택저압+일반전력</span></div>
+          <div className="card-desc">세대분(주택용저압 합산분) + 공용분(일반용전력)의 청구 항목을 입력하세요.</div>
+          <NumberField label="기본요금" unit="원" value={gBasic} onChange={setGBasic} />
+          <NumberField label="전력량요금" unit="원" value={gEnergy} onChange={setGEnergy} />
+          <NumberField label="기후환경요금" unit="원" value={gClimate} onChange={setGClimate} />
+          <NumberField label="연료비조정액" unit="원" value={gFuel} onChange={setGFuel} />
+        </div>
+        <div className="card dan">
+          <div className="card-title">단일계약 <span className="badge">주택고압 통합</span></div>
+          <div className="card-desc">세대+공용 전체 사용량을 주택용고압 단일 요율로 산정한 청구 항목을 입력하세요.</div>
+          <NumberField label="기본요금" unit="원" value={dBasic} onChange={setDBasic} />
+          <NumberField label="전력량요금" unit="원" value={dEnergy} onChange={setDEnergy} />
+          <NumberField label="기후환경요금" unit="원" value={dClimate} onChange={setDClimate} />
+          <NumberField label="연료비조정액" unit="원" value={dFuel} onChange={setDFuel} />
+        </div>
+      </div>
 
-      !calc.error && h('div', {className:"panel"},
-        h('div', {className:"panel-head"},
-          h('div', {className:"idx", style:{background:"var(--teal)"}}, "2"),
-          h('div', null, h('h2', null, "전력량요금 단계별 내역"), h('p', null, "DB에서 조회된 구간별 단가 적용"))
-        ),
-        h('div', {className:"panel-body"},
-          h('div', {className:"table-wrap"},
-            h('table', {className:"mini"},
-              h('thead', null, h('tr', null,
-                h('th', null, "구간"), h('th', null, "적용 사용량(kWh)"), h('th', null, "단가(원/kWh)"), h('th', null, "금액(원)")
-              )),
-              h('tbody', null,
-                calc.tierBreakdown.map((t, i) => h('tr', {key:i},
-                  h('td', null, fmt(t.from) + " ~ " + (t.to === '∞' ? '∞' : fmt(t.to))),
-                  h('td', null, fmt(t.usage)),
-                  h('td', null, t.rate),
-                  h('td', null, fmt(t.charge))
-                ))
-              )
-            )
-          ),
-          h('div', {className:"subtotal-line"},
-            h('span', {className:"label"}, "전력량요금 합계"),
-            h('span', {className:"value"}, fmt(calc.energy) + " 원")
-          )
-        )
-      ),
+      {/* ---------- 결과 ---------- */}
+      <div className="section-label">
+        <div className="num">3</div>
+        <h2>최종 비교 (부가세 · 전력산업기반기금 포함)</h2>
+        <div className="line"></div>
+      </div>
 
-      !calc.error && h('div', {className:"panel"},
-        h('div', {className:"panel-head"},
-          h('div', {className:"idx", style:{background:"var(--copper)"}}, "3"),
-          h('div', null, h('h2', null, "기후환경·연료비·기금 적용률"), h('p', null, "DB에 이력이 없는 시기는 정책 기본값으로 대체합니다 (아래에서 조정 가능)"))
-        ),
-        h('div', {className:"panel-body"},
-          h('div', {className:"grid grid-4"},
-            h(Field, { label:"기후환경단가(기본값)", unit:"원/kWh", value:climateDefault, onChange:setClimateDefault }),
-            h(Field, { label:"연료비단가(기본값)", unit:"원/kWh", value:fuelDefault, onChange:setFuelDefault }),
-            h(Field, { label:"기금율(기본값)", unit:"%", value:fundRateDefault, onChange:setFundRateDefault }),
-            h(Field, { label:"부가가치세율", unit:"%", value:vatRate, onChange:setVatRate })
-          ),
-          (calc.usedDefaultClimate || calc.usedDefaultFuel || calc.usedDefaultFund)
-            ? h('div', {className:"warn-box"},
-                "⚠ 이 시점은 DB에 " +
-                [calc.usedDefaultClimate && "기후환경단가", calc.usedDefaultFuel && "연료비단가", calc.usedDefaultFund && "기금율"].filter(Boolean).join('·') +
-                " 이력이 없어 위 기본값으로 계산했습니다. 실제 청구서와 대조가 필요한 달이면 01_요금DB에 해당 항목을 보강해주세요.")
-            : h('div', {className:"ok-box"}, "✓ 이 시점의 기후환경·연료비·기금율은 DB 이력값을 그대로 사용했습니다.")
-        )
-      ),
+      <div className="ledger">
+        <table>
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th className="num">종합계약</th>
+              <th className="num">단일계약</th>
+              <th className="num">차액 (종합&minus;단일)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.key}>
+                <td className="row-label">{r.label}</td>
+                <td className="num">{fmt(gonghap[r.key])}</td>
+                <td className="num">{fmt(dan_il[r.key])}</td>
+                <td className="num">{fmt(gonghap[r.key] - dan_il[r.key])}</td>
+              </tr>
+            ))}
+            <tr className="subtotal">
+              <td className="row-label">소계</td>
+              <td className="num">{fmt(gonghap.subtotal)}</td>
+              <td className="num">{fmt(dan_il.subtotal)}</td>
+              <td className="num">{fmt(gonghap.subtotal - dan_il.subtotal)}</td>
+            </tr>
+            <tr>
+              <td className="row-label">부가가치세 (10%)</td>
+              <td className="num">{fmt(gonghap.vat)}</td>
+              <td className="num">{fmt(dan_il.vat)}</td>
+              <td className="num">{fmt(gonghap.vat - dan_il.vat)}</td>
+            </tr>
+            <tr>
+              <td className="row-label">전력산업기반기금 (3.7%)</td>
+              <td className="num">{fmt(gonghap.fund)}</td>
+              <td className="num">{fmt(dan_il.fund)}</td>
+              <td className="num">{fmt(gonghap.fund - dan_il.fund)}</td>
+            </tr>
+            <tr className="final">
+              <td className="row-label">최종 청구금액</td>
+              <td className="num">{fmt(gonghap.final)}</td>
+              <td className="num">{fmt(dan_il.final)}</td>
+              <td className="num">{fmt(diff)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-      !calc.error && h('div', {className:"panel", style:{border:"1px solid var(--ink)"}},
-        h('div', {className:"panel-head", style:{background:"var(--ink)"}},
-          h('div', {className:"idx", style:{background:"var(--paper)", color:"var(--ink)"}}, "4"),
-          h('div', null, h('h2', {style:{color:"var(--paper)"}}, "최종 청구금액"), h('p', {style:{color:"#B8C4D6"}}, "부가세·기금 포함"))
-        ),
-        h('div', {className:"panel-body"},
-          h('table', {className:"mini"},
-            h('tbody', null,
-              h('tr', null, h('td', null, "기본요금"), h('td', null, fmt(calc.basic))),
-              h('tr', null, h('td', null, "전력량요금"), h('td', null, fmt(calc.energy))),
-              h('tr', null, h('td', null, "기후환경요금 (" + calc.climateRate + "원/kWh)"), h('td', null, fmt(calc.climateFee))),
-              h('tr', null, h('td', null, "연료비조정액 (" + calc.fuelRate + "원/kWh)"), h('td', null, fmt(calc.fuelFee))),
-              h('tr', {style:{fontWeight:600}}, h('td', null, "전기요금계"), h('td', null, fmt(calc.subtotal))),
-              h('tr', null, h('td', null, "부가가치세"), h('td', null, fmt(calc.vat))),
-              h('tr', null, h('td', null, "전력산업기반기금 (" + calc.fundRate + "%)"), h('td', null, fmt(calc.fund)))
-            )
-          ),
-          h('div', {className:"final-box"},
-            h('div', {className:"lbl"}, "최종 청구금액"),
-            h('div', {className:"val"}, fmt(calc.final) + "원")
-          )
-        )
-      )
-    ),
+      {/* ---------- 판정 ---------- */}
+      <div className="verdict">
+        <div className="verdict-card">
+          <div className="verdict-eyebrow">진단 결과</div>
+          <h3 className="verdict-headline">
+            {cheaper === "동일"
+              ? "두 계약방식의 청구금액이 동일합니다."
+              : <>이 단지는 <span className="amt">{cheaper}계약</span>이 월 <span className="amt">{fmt(savingMonthly)}원</span> 더 유리합니다.</>}
+          </h3>
+          <div className="verdict-stats">
+            <div className="stat">
+              <div className="k">월간 차액</div>
+              <div className="v mono">{fmt(savingMonthly)} 원</div>
+            </div>
+            <div className="stat">
+              <div className="k">연간 차액</div>
+              <div className="v mono">{fmt(savingAnnual)} 원</div>
+            </div>
+            <div className="stat">
+              <div className="k">세대당 월 차액</div>
+              <div className="v mono">{fmt(savingPerHH)} 원</div>
+            </div>
+            <div className="stat">
+              <div className="k">세대당 연간 차액</div>
+              <div className="v mono">{fmt(savingPerHHAnnual)} 원</div>
+            </div>
+          </div>
+        </div>
+        <div className="stamp-wrap">
+          <div className={"stamp " + (cheaper === "단일" ? "good" : cheaper === "종합" ? "bad" : "")}>
+            <div className="big">{cheaper === "동일" ? "동일" : cheaper}</div>
+            <div className="small">유&nbsp;리</div>
+          </div>
+        </div>
+      </div>
 
-    h('footer', null,
-      "G-123 요금DB 계산기 · 01_요금DB 시트의 669개 요금이력(2000.11~2024.01 시행)을 그대로 내장했습니다. 2024년 이후 시점은 2024-01-01 시행 요금이 계속 적용되는 것으로 계산합니다(별도 개정이 없다는 가정). ",
-      "계절 판정: 하계=7·8월, 동계=12·1·2월, 나머지=기타 (해당 시기 DB에 그 계절 구분이 없으면 자동으로 '기타' 기준을 사용). 모든 계산은 브라우저 내에서만 이뤄지며 저장되지 않습니다."
-    )
+      <footer className="note">
+        ※ 부가가치세는 소계 금액의 10%, 전력산업기반기금은 소계 금액의 3.7%를 각각 10원 미만 절사하여 산정한 값입니다(한전 청구 관행 기준 근사치이며, 실제 고지서와 원단위에서 소폭 차이가 날 수 있습니다).<br/>
+        ※ 종합계약은 세대분(주택용저압 합산) + 공용분(일반용전력)을 각각 별도 계약으로 산정하는 방식이며, 단일계약은 세대+공용 전체 사용량을 주택용고압 요율 하나로 통합 산정하는 방식입니다.<br/>
+        ※ 입력값은 한전 사이버지점(cyber.kepco.co.kr) 청구내역 조회 화면의 기본요금·전력량요금·기후환경요금·연료비조정액을 그대로 옮겨 입력하면 됩니다.
+      </footer>
+    </div>
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 </body>
 </html>
